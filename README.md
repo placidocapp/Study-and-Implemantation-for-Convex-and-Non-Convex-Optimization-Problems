@@ -8,7 +8,7 @@ try to do the fastest algorithms but make them easy to understand and learn.
 I'm trying to comment them a lot too, I hope this helps someone :).
 
 
-Line Search
+## Line Search
 
 I'm just starting to implement one simple backtracking algorithm and the
 zoom algorithm of the book Numerical Optimization from Jorge Nocedal and
