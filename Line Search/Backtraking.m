@@ -23,7 +23,7 @@ ro = 0.9;
 maxIter = 100;
 
 %Size
-n = size(df(zeros(10,10)),1)
+n = size(df(zeros(10,10)),1);
 
 %% Backtraking Algorithm
 

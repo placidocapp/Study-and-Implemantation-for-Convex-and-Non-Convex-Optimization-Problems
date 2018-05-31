@@ -17,13 +17,13 @@ alphaMax = 10;
 eps = 10^-20;
 
 %Backtracking
-ro = 0.8;
+ro = 0.5;
 
 %Todos
 maxIter = 100;
 
 %Size (Selects size based on the gradient size)
-n = size(df(zeros(10,10)),1)
+n = size(df(zeros(10,10)),1);
 
 %% Backtraking Algorithm
 
@@ -63,7 +63,7 @@ x(1) = 0.5;
 
 %Main loop
 for k = 1:maxIter
-    d = -df(x(k))  %Choose the direction as an steepest gradient descent
+    d = -df(x(k));  %Choose the direction as an steepest gradient descent
 
     %Inicializations for alpha search
     i = 1;
@@ -74,17 +74,14 @@ for k = 1:maxIter
         fio = f(x(k));              %fi(0)
         dfio = df(x(k));            %dfi(0)
         if (fi + eps*sign(fi) > fio + c1*alpha*dfio)||(i>1 && fi >= f(x(k) + d*alpha_ant) )
-            disp('Condição 1')
             alpha = zoom(alpha_ant, alpha, x(k), d, c1, c2, eps);
             break;
         end
-        dfi = df(x(k) + d*alpha)   %Contains the dfi(alpha) value
+        dfi = df(x(k) + d*alpha);   %Contains the dfi(alpha) value
         if abs(dfi)+ eps >= -c2*dfio
-            disp('Condição 2')
             break;
         end
         if dfi >= 0
-            disp('Condição 3')
             alpha = zoom(alpha, alpha_ant, x(k), d, c1, c2, eps);
             break;
         end
@@ -95,7 +92,6 @@ for k = 1:maxIter
     end
     
     x(k+1) = x(k) + alpha*d;
-    x(k+1)
 end
     
 %Display the x history and the solution value
