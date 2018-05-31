@@ -17,7 +17,7 @@ alphaMax = 10;
 eps = 10^-20;
 
 %Backtracking
-ro = 0.9;
+ro = 0.5;
 
 %Todos
 maxIter = 100;
