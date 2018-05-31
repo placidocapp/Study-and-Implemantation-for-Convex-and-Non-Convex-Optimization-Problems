@@ -1,8 +1,24 @@
 function [ y ] = f( x )
 %   Function to solve
-% y =x + x^3*((627122237356493*conj(x))/2251799813685248 + (153933462881711*conj(x)^2)/281474976710656 + (5581656484187147*conj(x)^3)/1125899906842624) + x*((5420896949983055*conj(x))/1125899906842624 + (8158648460577917*conj(x)^2)/9007199254740992 + (1143795557080799*conj(x)^3)/9007199254740992) + 2*x^2 + 3*x^3 + x^2*((8226958330713791*conj(x))/9007199254740992 + (1303893210946689*conj(x)^2)/281474976710656 + (109820732902227*conj(x)^3)/1125899906842624) + 4;
+% There are some example functions to test, don't forget to change de
+% derivative too ! (and the n value)
+
+%% 1) Simple Quadratic  n = 1
 % y = x^2;
+
+%% 2) Sin function  n = 1
 % y = sin(x);
-y = x^2 + 3*x + 50;
+
+%% 3) Simple Quadratic  n = 1
+% y = x^2 + 3*x + 50;
+
+%% 4) Ackley N. 2 Function from http://benchmarkfcns.xyz/benchmarkfcns/ackleyn2fcn.html
+   %n = 2       solutionn must be -200 and x=(0,0)
+% y = -200 * exp(-0.02 * sqrt((x(1,1) .^ 2) + (x(2,1) .^ 2)));
+
+%% 5) Schwefel 2.20 Function from http://benchmarkfcns.xyz/benchmarkfcns/schwefel220fcn.html
+   %n = 3       solutionn must be 0 and x=(0,0,0)
+y = sum(abs(x), 1);
+
 end
 

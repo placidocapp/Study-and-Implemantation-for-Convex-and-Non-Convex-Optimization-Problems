@@ -12,20 +12,12 @@ while (1)
     %    ( 2*( f(x+d*(alphahi-alphalow)) -f(x+alphalow*d)...
     %   -df(x+alphalow*d)*(alphahi-alphalow) ) )
     
-    %TESTE
-    alphalow;
-    alphahi;
-    
     %Interpolate using bisection approach
     alpha = (alphahi + alphalow)/2;
     
     fi = f(x + d*alpha);    %fi(alpha)
     fio = f(x);             %fi(0)
     dfio = df(x);           %dfi(0)
-    
-    %TESTE
-    fi_low = f(x + d*alphalow);
-    fi_hi = f(x + d*alphahi);
     
     %This part was added by me, sometimes the algorithm tends to the value
     %that satisfies the conditions but never reaches that point, so if its
@@ -34,7 +26,7 @@ while (1)
         alpha = (alphahi+alphalow)/2;
         break;
     end
-    if (fi + eps*sign(fi) > fio + c1*alpha*dfio)||(fi + eps*sign(fi) >= f(x + d*alphalow))  
+    if (fi + eps*sign(fi) > fio + c1*alpha*dfio)||(fi + eps*sign(fi) >= f(x' + d*alphalow))  
         disp('Condição Zoom 1')
         alphahi = alpha;
     else
