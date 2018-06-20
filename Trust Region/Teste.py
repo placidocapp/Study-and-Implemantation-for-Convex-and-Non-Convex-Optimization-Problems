@@ -1,0 +1,9 @@
+
+
+print('pla')
+
+
+
+
+input("prompt: ")
+
