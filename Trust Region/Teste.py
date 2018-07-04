@@ -1,9 +1,0 @@
-
-
-print('pla')
-
-
-
-
-input("prompt: ")
-

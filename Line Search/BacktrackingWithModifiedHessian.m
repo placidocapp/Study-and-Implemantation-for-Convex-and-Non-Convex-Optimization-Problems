@@ -1,7 +1,7 @@
 % Algorithm from Numerical Optimization. Jorge Nocedal and Stephen J. Wright.
 % Second edition. Zoom algorithm can be found at pages 60 and 61.
 % MATLAB code by Plácido Campos
-% Last modified: may 30, 20018
+% Last modified: july 4, 2018
 
 clear all;
 close all;
