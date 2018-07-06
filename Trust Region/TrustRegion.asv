@@ -2,7 +2,6 @@
 % Second edition. This algorithm can be found at pages 69, and the way to
 % choose pk can be found at pages 71-77
 % MATLAB code by Plácido Campos
-% Last modified: july 4, 2018
 
 clear all;
 close all;
@@ -10,12 +9,14 @@ clc
 
 %%  Parameters
 
-maxIter = 2000;  %Maximun number of iterations
+maxIter = 4000;  %Maximun number of iterations
 n = 4;          %Dimension of the problem   
 eta = 0.20;     %Parameter that decides if the algorithm steps or not,
                 %the book recomends it between (0,0.25)
-how_choose_step = 0; %If 0 then choose the step with cauchy, else use 
+how_choose_step = 3; %If 0 then choose the step with cauchy, else use 
                      %dogleg
+maxIterSub = 10;    %Max Iterations of the subproblem
+eps = 10^-8;        %Stop criteria to Trust region subptoblem
 
 %% Inicialization
 
@@ -32,6 +33,9 @@ k = 1;
 pu = zeros(maxIter,n);      %Dogleg mehtod
 pb = zeros(maxIter,n);      %Dogleg mehtod
 syms tau_aux;               %Dogleg method
+lambda = zeros(maxIterSub,1);  %Trust Region subproblem
+lambda(1) = 1;
+q = zeros(n,1);             %Trust Region subproblem
 
 %% Function
 
@@ -80,8 +84,8 @@ for k = 1:maxIter
             tau(k) = min( 1, norm(gk)^3/(delta(k)*aux) );
         end
         p(k,:) = - tau(k)*delta(k)*gk/norm(gk);
-    else
-        %Dogleg Method
+    elseif how_choose_step == 1
+        %Dogleg Method from Numerical optimization page 87
         pu(k,:) = - pinv(B(:,:,k))*g(x(k,:)');
         pb(k,:) = - gk'*gk/(aux)*gk;
 
@@ -95,7 +99,6 @@ for k = 1:maxIter
                 (tau_aux-1)*(pb(k,:) - pu(k,:)) ) == delta(k)^2, tau_aux);
             aux = eval(sol) > 0;
             tau(k) = sum(eval(sol).*aux);
-            tau(k)
         else
             tau(k) = 2;
         end
@@ -106,6 +109,23 @@ for k = 1:maxIter
         else 
             p(k,:) = pu(k,:) + (tau(k) - 1)*( pb(k,:) - pu(k,:) );
         end
+    else
+        %Trust Region Subproblem
+        for i = 1:maxIterSub
+            %If B + lambda*I <= 0 than 
+            R = chol(B(:,:,k)+lambda(i)*eye(n));
+            p(k,:) = -pinv(R'*R)*gk;
+            q = pinv(R')*p(k,:)';
+            lambda(i+1) = lambda(i) + ( norm(p(k,:))/norm(q) )^2*...
+            ( ( norm(p(k,:))-delta(k) )/delta(k) ); 
+            
+            %Stop creteria
+            if abs(lambda(i+1) - lambda(i)) < eps
+                break
+            end
+        end
+        %Gess the initial lambda equals to the last one
+        lambda(1) = lambda(i);
     end
     %% Decide to step or to rise/decrease the area delta
     
@@ -135,11 +155,16 @@ f(x(end,:)')
 sol = -(pinv(A)*b)'
 
 %% Plot some graphs
+x_error = zeros(maxIter,1);
+f_error = zeros(maxIter,1);
+for i = 1:maxIter
+    x_error(i) = norm(sol) - norm(x(i,:));
+    f_error(i) = f(sol') - f(x(i,:)');
+end
 
-x_error = sol - x;
-f_error = f(sol) - f(x);
 k = 1:maxIter;
-plot(k,x_error)
+subplot(2,1,1), plot(k,x_error), title('Error in position x')
+subplot(2,1,2), plot(k,x_error), title('Error in function value')
         
         
         

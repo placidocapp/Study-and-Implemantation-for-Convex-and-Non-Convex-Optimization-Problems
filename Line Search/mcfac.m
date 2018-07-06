@@ -27,8 +27,6 @@ for j = 1:n
     
     c(j,j) = A(j,j) - sum;
     D(j,j) = max([abs(c(j,j)), (max(max(abs(c)))/beta)^2, eps]);
-    C = c(j,j)
-    d = D(j,j)
     for i = (j+1):n
         sum = 0;
         for s = 1:(j-1)
