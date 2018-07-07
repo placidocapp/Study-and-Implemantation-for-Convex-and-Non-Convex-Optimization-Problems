@@ -9,11 +9,11 @@ clc
 
 %%  Parameters
 
-maxIter = 100;  %Maximun number of iterations
+maxIter = 10;  %Maximun number of iterations
 n = 4;          %Dimension of the problem   
 eta = 0.20;     %Parameter that decides if the algorithm steps or not,
                 %the book recomends it between (0,0.25)
-how_choose_step = 2; %If 0 then choose the step with cauchy, else use 
+how_choose_step = 1; %If 0 then choose the step with cauchy, else use 
                      %dogleg
 maxIterSub = 10;    %Max Iterations of the subproblem
 eps = 10^-8;        %Stop criteria to Trust region subptoblem
@@ -86,25 +86,26 @@ for k = 1:maxIter
         p(k,:) = - tau(k)*delta(k)*gk/norm(gk);
     elseif how_choose_step == 1
         %Dogleg Method from Numerical optimization page 87
-        pu(k,:) = - pinv(B(:,:,k))*g(x(k,:)');
+        pu(k,:) = - pinv(B(:,:,k))*gk;
         pb(k,:) = - gk'*gk/(aux)*gk;
 
         %Find tau
         if norm(pu) <= delta(k)
             %In this case tau is between 0 and 1
-            tau(k) = delta(k)/norm(pu);
+            tau(k) = 1;
         elseif norm(pb) <= delta(k)
             %In this case tau is between 1 and 2
             sol = solve(norm( pu(k,:) + ...
-                (tau_aux-1)*(pb(k,:) - pu(k,:)) ) == delta(k)^2, tau_aux);
+                (tau_aux-1)*(pb(k,:) - pu(k,:)) )^2 == delta(k)^2, tau_aux);
             aux = eval(sol) > 0;
-            tau(k) = sum(eval(sol).*aux);
+            aux2 = eval(sol) <= 2;
+            tau(k) = max(eval(sol).*aux.*aux2);
         else
             tau(k) = 2;
         end
     
         %Choose next path direction based on tau
-        if tau(k) < 1
+        if tau(k) <= 1
             p(k,:) = tau(k)*pu(k,:);
         else 
             p(k,:) = pu(k,:) + (tau(k) - 1)*( pb(k,:) - pu(k,:) );
@@ -136,11 +137,18 @@ for k = 1:maxIter
     
     %Evaluate ro(k)
     ro(k) = ( fk - f(x(k,:)'+p(k,:)') )/...
-        ( m(x(k,:)',zeros(n,1)) - m(x(k,:)',p(k,:)') );
+        ( m(x(k,:)',zeros(n,1)) - m(x(k,:)',p(k,:)') +10^-6);
+    
+    %Correct the case when both increase, just happens with dogleg
+%     if (fk - f(x(k,:)'+p(k,:)') < 0) || ro(k) > 0        
+%         disp('Entrou')
+%         ro(k) = -ro(k);      
+%     end
+    
     if ro(k) < 0.25
         delta(k+1) = 0.25*delta(k);
     else
-        if (ro(k) > 3/4 || norm(p(k)) == delta(k))
+        if (ro(k) > 3/4 || norm(p(k,:)) > delta(k) - 10^-6)
             delta(k+1) = min(2*delta(k), deltaMax);
         else
             delta(k+1) = delta(k);
@@ -153,6 +161,7 @@ for k = 1:maxIter
     else
         x(k+1,:) = x(k,:);
     end
+    k
 end
         
 x(end,:)
@@ -169,7 +178,7 @@ end
 
 k = 1:maxIter;
 subplot(2,1,1), plot(k,x_error), title('Error in position x')
-subplot(2,1,2), plot(k,x_error), title('Error in function value')
+subplot(2,1,2), plot(k,f_error), title('Error in function value')
         
         
         
