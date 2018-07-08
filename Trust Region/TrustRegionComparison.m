@@ -10,7 +10,7 @@ clc
 %%  Parameters
 
 maxIter = 50;  %Maximun number of iterations
-n = 2;          %Dimension of the problem   
+n = 4;          %Dimension of the problem   
 eta = 0.20;     %Parameter that decides if the algorithm steps or not,
                 %the book recomends it between (0,0.25)
 how_choose_step = 1; %If 0 then choose the step with cauchy, else use 
@@ -90,19 +90,31 @@ for how_choose_step = 0:2
             pb(k,:) = - gk'*gk/(aux)*gk;
 
             %Find tau
-            if norm(pu) <= delta(k)
-                %In this case tau is between 0 and 1
-                tau(k) = 1;
-            elseif norm(pb) <= delta(k)
-                %In this case tau is between 1 and 2
-                sol = solve(norm( pu(k,:) + ...
-                    (tau_aux-1)*(pb(k,:) - pu(k,:)) )^2 == delta(k)^2, tau_aux);
-                aux = eval(sol) > 0;
+        if norm(pu(k,:)) <= delta(k)
+            %In this case we go with the step pu
+            tau(k) = 1;
+        elseif norm(pb(k,:)) <= delta(k)
+            %In this case we fint the tau that reaches the maximum alowable
+            %distance, if the problem os right programmed till here we
+            %could have 2 solutions or 1 solution. In the first case the
+            %line between pu and pb cross the circle (the trust region) 2
+            %times from outside for inside and for outside again, in this
+            %case we should choose the one with tau < 2 to give preference
+            %for the direction pu since pb could rise the solution value
+            %sometimes and finaly if we have one solution we choose it even
+            %if it's not positive
+            sol = solve(norm( pu(k,:) + ...
+                (tau_aux-1)*(pb(k,:) - pu(k,:)) )^2 == delta(k)^2, tau_aux);
+            aux = eval(sol) > 0;
+            if sum(aux) == 2
                 aux2 = eval(sol) <= 2;
-                tau(k) = max(eval(sol).*aux.*aux2);
-            else
-                tau(k) = 2;
+            else 
+                aux2 = ones(2,1);
             end
+            tau(k) = max(eval(sol).*aux.*aux2);
+        else
+            tau(k) = 2;
+        end
 
             %Choose next path direction based on tau
             if tau(k) < 1

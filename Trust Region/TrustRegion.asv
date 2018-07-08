@@ -9,12 +9,12 @@ clc
 
 %%  Parameters
 
-maxIter = 1000;  %Maximun number of iterations
+maxIter = 100;  %Maximun number of iterations
 n = 4;          %Dimension of the problem   
 eta = 0.20;     %Parameter that decides if the algorithm steps or not,
                 %the book recomends it between (0,0.25)
-how_choose_step = 1; %If 0 then choose the step with cauchy, else use 
-                     %dogleg
+how_choose_step = 1; %If 0 then choose the step with cauchy, if 1 use 
+                     %dogleg else use the subproblem technique 
 maxIterSub = 10;    %Max Iterations of the subproblem
 eps = 10^-8;        %Stop criteria to Trust region subptoblem
 
@@ -40,11 +40,11 @@ q = zeros(n,1);             %Trust Region subproblem
 %% Function
 
 %Function values
-A = randn(n);
-A = A'*A;
-A = A'+ A;
-b = randn(n,1);
-
+% A = randn(n);
+% A = A'*A;
+% A = A'+ A;
+% b = randn(n,1);
+load('CasoComErro.mat')
 %Calculate the function value and its derivatives
 f = @(x) 0.5*x'*A*x + b'*x;
 g = @(x) A*x + b;
@@ -86,20 +86,26 @@ for k = 1:maxIter
         p(k,:) = - tau(k)*delta(k)*gk/norm(gk);
     elseif how_choose_step == 1
         %Dogleg Method from Numerical optimization page 87
-        pu(k,:) = - pinv(B(:,:,k))*g(x(k,:)');
+        pu(k,:) = - pinv(B(:,:,k))*gk;
         pb(k,:) = - gk'*gk/(aux)*gk;
 
         %Find tau
         if norm(pu) <= delta(k)
-            %In this case tau is between 0 and 1
-            tau(k)
+            %In this case we go with the step pu
+            tau(k) = 1;
         elseif norm(pb) <= delta(k)
-            %In this case tau is between 1 and 2
+            %In this case we fint the tau that reaches the maximum alowable
+            %distance, if the problem os right programmed till here we
+            %could have 
             sol = solve(norm( pu(k,:) + ...
                 (tau_aux-1)*(pb(k,:) - pu(k,:)) )^2 == delta(k)^2, tau_aux);
             aux = eval(sol) > 0;
-            res = eval(sol)
-            tau(k) = max(eval(sol).*aux);
+            if sum(aux) == 2
+                aux2 = eval(sol) <= 2;
+            else 
+                aux2 = ones(2,1);
+            end
+            tau(k) = max(eval(sol).*aux.*aux2);
         else
             tau(k) = 2;
         end
@@ -137,7 +143,7 @@ for k = 1:maxIter
     
     %Evaluate ro(k)
     ro(k) = ( fk - f(x(k,:)'+p(k,:)') )/...
-        ( m(x(k,:)',zeros(n,1)) - m(x(k,:)',p(k,:)') );
+        ( m(x(k,:)',zeros(n,1)) - m(x(k,:)',p(k,:)') +10^-6);
     
     %Correct the case when both increase, just happens with dogleg
 %     if (fk - f(x(k,:)'+p(k,:)') < 0) || ro(k) > 0        
@@ -161,6 +167,7 @@ for k = 1:maxIter
     else
         x(k+1,:) = x(k,:);
     end
+    k
 end
         
 x(end,:)
