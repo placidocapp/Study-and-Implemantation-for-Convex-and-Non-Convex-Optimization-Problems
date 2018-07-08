@@ -86,34 +86,24 @@ for k = 1:maxIter
         p(k,:) = - tau(k)*delta(k)*gk/norm(gk);
     elseif how_choose_step == 1
         %Dogleg Method from Numerical optimization page 87
-        pu(k,:) = - pinv(B(:,:,k))*gk;
-        pb(k,:) = - gk'*gk/(aux)*gk;
+        pu(k,:) = - gk'*gk/(aux)*gk;
+        pb(k,:) = - pinv(B(:,:,k))*gk;
 
         %Find tau
-        if norm(pu(k,:)) <= delta(k)
-            %In this case we go with the step pu
-            tau(k) = 1;
+        if norm(pu(k,:)) > delta(k)
+            %If pu is already bigger than the trust regian then choose tau
+            %to the limit
+            tau(k) = delta(k)/norm(pu(k,:));
         elseif norm(pb(k,:)) <= delta(k)
-            %In this case we fint the tau that reaches the maximum alowable
-            %distance, if the problem os right programmed till here we
-            %could have 2 solutions or 1 solution. In the first case the
-            %line between pu and pb cross the circle (the trust region) 2
-            %times from outside for inside and for outside again, in this
-            %case we should choose the one with tau < 2 to give preference
-            %for the direction pu since pb could rise the solution value
-            %sometimes and finaly if we have one solution we choose it even
-            %if it's not positive
+            %if pb is inside the trust region than we can go with it
+            tau(k) = 2;
+        else
+            %If tau is between 1 and 2 then we find the maximum feasible
+            %tau
             sol = solve(norm( pu(k,:) + ...
                 (tau_aux-1)*(pb(k,:) - pu(k,:)) )^2 == delta(k)^2, tau_aux);
-            aux = eval(sol) > 0;
-            if sum(aux) == 2            
-                aux2 = eval(sol) <= 2;
-            else 
-                aux2 = ones(2,1);
-            end
-            tau(k) = max(eval(sol).*aux.*aux2);
-        else
-            tau(k) = 2;
+            res = eval(sol)
+            tau(k) = max(eval(sol));
         end
     
         %Choose next path direction based on tau

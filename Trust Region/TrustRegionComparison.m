@@ -10,7 +10,7 @@ clc
 %%  Parameters
 
 maxIter = 50;  %Maximun number of iterations
-n = 4;          %Dimension of the problem   
+n = 2;          %Dimension of the problem   
 eta = 0.20;     %Parameter that decides if the algorithm steps or not,
                 %the book recomends it between (0,0.25)
 how_choose_step = 1; %If 0 then choose the step with cauchy, else use 
@@ -49,13 +49,22 @@ b = randn(n,1);
 f = @(x) 0.5*x'*A*x + b'*x;
 g = @(x) A*x + b;
 H = @(x) A;
+sol = -(pinv(A)*b)';
 
+%Trigonometric function
 % f = @(x) sin(x(1))+sin(x(2));
 % g = @(x) [cos(x(1));
 %           cos(x(2))];
 % H = @(x) [  -sin(x(1)) 0;
 %             0          -sin(x(2))];
+% sol = [-1.570796327268957  -1.570796324699814];
 
+% f = @(x) -200*exp(-0.2*sqrt(x(1)^2+x(2)^2));
+% g = @(x) [(4*x(1).*exp(-(x(1).^2 + x(2).^2)^(1/2)/50))./(x(1).^2 + x(2).^2)^(1/2);
+%           (4*x(2).*exp(-(x(1).^2 + x(2).^2)^(1/2)/50))./(x(1).^2 + x(2).^2)^(1/2)];
+% H = @(x) [ (4*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(1/2) - (2*x(1)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(1)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2),                                                    - (2*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2);
+%                                                     - (2*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2), (4*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(1/2) - (2*x(2)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(2)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2)] ;
+% sol = [0 0];
 
 m = @(x,p) f(x) + g(x)'*p + 0.5*p'*B(:,:,k)*p;
 
@@ -90,32 +99,21 @@ for how_choose_step = 0:2
             pb(k,:) = - gk'*gk/(aux)*gk;
 
             %Find tau
-        if norm(pu(k,:)) <= delta(k)
-            %In this case we go with the step pu
-            tau(k) = 1;
-        elseif norm(pb(k,:)) <= delta(k)
-            %In this case we fint the tau that reaches the maximum alowable
-            %distance, if the problem os right programmed till here we
-            %could have 2 solutions or 1 solution. In the first case the
-            %line between pu and pb cross the circle (the trust region) 2
-            %times from outside for inside and for outside again, in this
-            %case we should choose the one with tau < 2 to give preference
-            %for the direction pu since pb could rise the solution value
-            %sometimes and finaly if we have one solution we choose it even
-            %if it's not positive
-            sol = solve(norm( pu(k,:) + ...
-                (tau_aux-1)*(pb(k,:) - pu(k,:)) )^2 == delta(k)^2, tau_aux);
-            aux = eval(sol) > 0;
-            if sum(aux) == 2
-                aux2 = eval(sol) <= 2;
-            else 
-                aux2 = ones(2,1);
-            end
-            tau(k) = max(eval(sol).*aux.*aux2);
-        else
-            tau(k) = 2;
-        end
-
+            if norm(pu(k,:)) > delta(k)
+                %If pu is already bigger than the trust regian then choose tau
+                %to the limit
+                tau(k) = delta(k)/norm(pu(k,:));
+            elseif norm(pb(k,:)) <= delta(k)
+                %if pb is inside the trust region than we can go with it
+                tau(k) = 2;
+            else
+                %If tau is between 1 and 2 then we find the maximum feasible
+                %tau
+                sol = solve(norm( pu(k,:) + ...
+                    (tau_aux-1)*(pb(k,:) - pu(k,:)) )^2 == delta(k)^2, tau_aux);
+                res = eval(sol)
+                tau(k) = max(eval(sol));
+           end
             %Choose next path direction based on tau
             if tau(k) < 1
                 p(k,:) = tau(k)*pu(k,:);
@@ -125,10 +123,10 @@ for how_choose_step = 0:2
         else
             %Trust Region Subproblem
             for i = 1:maxIterSub
-                %If B + lambda*I <= 0 than correct lambda
-                aux2 = eig(B(:,:,k)+lambda(i)*eye(n));
-                if sum(aux2 < 0) > 0
-                    lambda(i) = lambda(i)-min(aux2)+eps;
+               %If B + lambda*I <= 0 than correct lambda
+                aux_ = eig(B(:,:,k)+lambda(i)*eye(n));
+                if sum(aux_ < 0) > 0
+                    lambda(i) = lambda(i)-min(aux_)-eps*min(aux_);
                 end
 
                 R = chol(B(:,:,k)+lambda(i)*eye(n));
@@ -170,7 +168,6 @@ for how_choose_step = 0:2
 
     x(end,:)
     f(x(end,:)')
-    sol = -(pinv(A)*b)'
 
     %% Plot some graphs
     x_error = zeros(maxIter,1);
