@@ -1,0 +1,18 @@
+function [ t ] = zoom( g, f, x, p, l, h, c1, c2 )
+%Receives a low and a high point and zoom between this values to find the
+%point that satisfies the strong wolfe conditions
+
+while(1)
+    %% Initial gess using bisection
+    
+    t = 0.5*(l+h);
+    
+    %% Calculate the function values
+    fak = f(x+t*p);
+    fk = f(x);
+    gak = g(x+t*p);
+    gk = g(x);
+
+    if fak > fk+c1*t
+end
+

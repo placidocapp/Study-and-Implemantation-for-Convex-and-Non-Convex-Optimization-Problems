@@ -1,0 +1,27 @@
+function [ t ] = lineSearch( f, g, x, p, c1, c2 )
+%Call zoom algorithm
+
+%% Initializations
+
+alpha0 = 0;         %The inferior limit
+alphaMax = 10;      %The superior limit
+alpha = 1;         %The actual point
+i = 1;              %Counter of iterations
+maxSubIter = 30;    %Maximum iterations for this algorithm
+
+%% Algorithm
+
+while(1)
+    %% Calculate all values of the functions
+    
+    fak = f(x+alpha*p);
+    fk = f(x);
+    gak = g(x+alpha*p);
+    gk = g(x);
+    
+    %% Chose to call or not the zoom
+    if fak > fi
+
+
+end
+
