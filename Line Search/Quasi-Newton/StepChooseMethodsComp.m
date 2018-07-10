@@ -17,7 +17,6 @@ chooseAlgorithm = 1;    %If this flat equals to 0 uses de DFP method,
 x = zeros(n,maxIter);   %Position of the search
 % x(:,1) = randn(n,1);
 x(:,1) = [-1.2 1];
-% x(:,1) = [1 1];
 p = zeros(n,maxIter);   %Direction 
 H = zeros(n,n,maxIter); %Inverse of the aproxximate hessian
 y = zeros(n,maxIter);   %yk = g(k+1) - g(k)

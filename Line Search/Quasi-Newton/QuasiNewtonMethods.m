@@ -4,19 +4,24 @@ clc
 
 %%  Parameters
 
-maxIter = 1000;  %Maximun number of iterations
+maxIter = 100;  %Maximun number of iterations
 maxSubIter = 30; %Max iterations of the bisection algorithm
 n = 2;         %Dimension of the problem  
 c1 = 10^-4;    %c1 and c2 are the constants of wolfe conditions    
 c2 = 0.5;
 eps = 10^-8;   %Stop criteria for the gradient
-chooseAlgorithm = 1;    %If this flat equals to 0 uses de DFP method, 
+chooseAlgorithm = 2;    %If this flat equals to 0 uses de DFP method, 
                         %if 1 uses bfgs and else uses regular newton step
-
+chooseStepAlg = 1;      %If 0 choose the bisection else choose the zoom
+                        %algorithm
+chooseHessModif = 0;    %If 0 modify B with cholesky factorization if 1 
+                        %uses the 2-norm minimization
+                        
 %% Inicializations
     
 x = zeros(n,maxIter);   %Position of the search
 x(:,1) = randn(n,1);
+x(:,1) = [0.1 0.6];
 p = zeros(n,maxIter);   %Direction 
 H = zeros(n,n,maxIter); %Inverse of the aproxximate hessian
 y = zeros(n,maxIter);   %yk = g(k+1) - g(k)
@@ -33,17 +38,17 @@ A = A'+ A;
 b = randn(n,1);
 
 %Calculate the function value and its derivatives
-f = @(x) 0.5*x'*A*x + b'*x;
-g = @(x) A*x + b;
-B = @(x) A;
-sol = - (pinv(A)*b)';
+% f = @(x) 0.5*x'*A*x + b'*x;
+% g = @(x) A*x + b;
+% B = @(x) A;
+% sol = - (pinv(A)*b)';
 
-% f = @(x) sin(x(1))+sin(x(2));
-% g = @(x) [cos(x(1));
-%           cos(x(2))];
-% B = @(x) [  -sin(x(1)) 0;
-%             0          -sin(x(2))];
-% sol = [-1.570796327268957  -1.570796324699814];
+f = @(x) sin(x(1))+sin(x(2));
+g = @(x) [cos(x(1));
+          cos(x(2))];
+B = @(x) [  -sin(x(1)) 0;
+            0          -sin(x(2))];
+sol = [-1.570796327268957  -1.570796324699814];
 
 % f = @(x) -200*exp(-0.2*sqrt(x(1)^2+x(2)^2));
 % g = @(x) [(4*x(1).*exp(-(x(1).^2 + x(2).^2)^(1/2)/50))./(x(1).^2 + x(2).^2)^(1/2);
@@ -51,6 +56,16 @@ sol = - (pinv(A)*b)';
 % B = @(x) [ (4*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(1/2) - (2*x(1)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(1)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2),                                                    - (2*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2);
 %                                                     - (2*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2), (4*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(1/2) - (2*x(2)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(2)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2)] ;
 % sol = [0 0];
+
+%Rosenbrock
+% a = 1;
+% b = 100;
+% f = @(x) (a-x(1))^2 + b*(x(2)-x(1)^2)^2; 
+% g = @(x) [-2*(a - x(1))-4*b*x(1)*(x(2)-x(1)^2);
+%           2*b*(x(2)-x(1)^2)];
+% B = @(x) [2-4*b*x(2)+12*b*x(1)^2 -4*b*x(1);
+%           -4*b*x(1)                2*b];       
+% sol = [a a^2];
 
 %% Initial gesses
 
@@ -80,35 +95,16 @@ for k = 1:maxIter
     p(:,k) = - H(:,:,k)*gk;
     
     %% Choose the step lenght by bisection method
-    
-    beta = -1;
-    alpha = 0;
-    t(k) = 1;
-    i = 0;
-    while(1)
-        if f(x(:,k)+t(k)*p(:,k)) > f(x(:,k)) + c1*t(k)*gk'*p(:,k)
-            beta = t(k);
-            t(k) = 0.5*(alpha+beta);
-        elseif g(x(:,k)+t(k)*p(:,k)) < c2*gk'*p(:,k)
-            alpha = t(k);
-            if beta == -1
-                t(k) = 2*alpha;
-            else
-                t(k) = 0.5*(alpha+beta);
-            end
-        else
-            break;
-        end
-        i = i+1;
-        if i >= maxSubIter
-            t(k) = 0.001;
-            break;
-        end
+        
+    if chooseStepAlg == 0
+        t(k) = bisec( f, g, x(:,k), p(:,k), c1, c2 );
+    else
+        t(k) = lineSearch( f, g, x(:,k), p(:,k), c1, c2 );
     end
     
     %% Stop criteria
     if norm(gk) < eps
-        disp('Stoped at')
+        disp('Stopped at')
         kfinal = k
         break
     end
@@ -132,9 +128,19 @@ for k = 1:maxIter
     else
         %Newton method with modified hessian
         H(:,:,k+1) = pinv(B(x(:,k+1)));
-        if sum(eig(H(:,:,k+1)) < 0) > 0
-           [L,D] = mcfac(H(:,:,k+1));
-           H(:,:,k+1) = L*D*L';
+        if chooseHessModif == 0
+            if sum(eig(H(:,:,k+1)) < 0) > 0
+               [L,D] = mcfac(H(:,:,k+1));
+               H(:,:,k+1) = L*D*L';
+            end
+        else 
+            %Calculates every eigenvalue and sums I*lambda were lambda is
+            %the lowest eigenvalue plus an error
+            val = eig(H(:,:,k+1));
+            if sum(val < 0) > 0
+                lambda = min(val);
+                H(:,:,k+1) = H(:,:,k+1) + eye(n)*(-lambda+0.1);
+            end
         end
     end
 end
@@ -144,21 +150,25 @@ if kfinal == -1
 end
 
 x(:,kfinal)
+norm(g(x(:,kfinal)))
 f(x(:,kfinal))
     
 %% Plot some graphs
 
 x_error = zeros(kfinal,1);
 f_error = zeros(kfinal,1);
+g_evol = zeros(kfinal,1);
 for i = 1:kfinal
     x_error(i) = norm(sol) - norm(x(:,i));
     f_error(i) = f(sol') - f(x(:,i));
+    g_evol(i) = norm(g(x(:,i)));
 end
 
 k = 1:kfinal;
-subplot(2,1,1), plot(k,x_error), title('Error in position x')
-subplot(2,1,2), plot(k,f_error), title('Error in function value')    
-    
+
+subplot(3,1,1), plot(k,x_error), title('Error in position x')
+subplot(3,1,2), plot(k,f_error), title('Error in function value')
+subplot(3,1,3), plot(k,g_evol), title('Gradient evolution')
     
     
     

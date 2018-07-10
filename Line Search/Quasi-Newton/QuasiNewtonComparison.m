@@ -4,20 +4,22 @@ clc
 
 %%  Parameters
 
-maxIter = 50;  %Maximun number of iterations
+maxIter = 1000;  %Maximun number of iterations
+maxSubIter = 30; %Max iterations of the bisection algorithm
 n = 2;         %Dimension of the problem  
 c1 = 10^-4;    %c1 and c2 are the constants of wolfe conditions    
 c2 = 0.5;
-eps = 10^-2;   %Stop criteria for the gradient
+eps = 10^-8;   %Stop criteria for the gradient
 chooseAlgorithm = 1;    %If this flat equals to 0 uses de DFP method, 
-                        %if 1 uses bfgs and else uses regular newton step
-
+                        %if 1 uses bfgs else uses regular newton step
+chooseStepAlg = 2;      %If 0 choose the bisection else choose the zoom
+                        %algorithm
+                        
 %% Inicializations
     
 x = zeros(n,maxIter);   %Position of the search
 % x(:,1) = randn(n,1);
-% x(:,1) = [-1.2 1];
-x(:,1) = [1 1];
+x(:,1) = [-1.2 1];
 p = zeros(n,maxIter);   %Direction 
 H = zeros(n,n,maxIter); %Inverse of the aproxximate hessian
 y = zeros(n,maxIter);   %yk = g(k+1) - g(k)
@@ -46,22 +48,22 @@ b = randn(n,1);
 %             0          -sin(x(2))];
 % sol = [-1.570796327268957  -1.570796324699814];
 
-f = @(x) -200*exp(-0.2*sqrt(x(1)^2+x(2)^2));
-g = @(x) [(4*x(1).*exp(-(x(1).^2 + x(2).^2)^(1/2)/50))./(x(1).^2 + x(2).^2)^(1/2);
-          (4*x(2).*exp(-(x(1).^2 + x(2).^2)^(1/2)/50))./(x(1).^2 + x(2).^2)^(1/2)];
-B = @(x) [ (4*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(1/2) - (2*x(1)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(1)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2),                                                    - (2*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2);
-                                                    - (2*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2), (4*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(1/2) - (2*x(2)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(2)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2)] ;
-sol = [0 0];
+% f = @(x) -200*exp(-0.2*sqrt(x(1)^2+x(2)^2));
+% g = @(x) [(4*x(1).*exp(-(x(1).^2 + x(2).^2)^(1/2)/50))./(x(1).^2 + x(2).^2)^(1/2);
+%           (4*x(2).*exp(-(x(1).^2 + x(2).^2)^(1/2)/50))./(x(1).^2 + x(2).^2)^(1/2)];
+% B = @(x) [ (4*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(1/2) - (2*x(1)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(1)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2),                                                    - (2*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2);
+%                                                     - (2*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2), (4*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(1/2) - (2*x(2)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(2)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2)] ;
+% sol = [0 0];
 
 %Rosenbrock
-% a = 1;
-% b = 100;
-% f = @(x) (a-x(1))^2 + b*(x(2)-x(1)^2)^2; 
-% g = @(x) [-2*(a - x(1))-4*b*x(1)*(x(2)-x(1)^2);
-%           2*b*(x(2)-x(1)^2)];
-% B = @(x) [2-4*b*x(2)+12*b*x(1)^2 -4*b*x(1);
-%           -4*b*x(1)                2*b];     
-% sol = [a a^2];
+a = 1;
+b = 100;
+f = @(x) (a-x(1))^2 + b*(x(2)-x(1)^2)^2; 
+g = @(x) [-2*(a - x(1))-4*b*x(1)*(x(2)-x(1)^2);
+          2*b*(x(2)-x(1)^2)];
+B = @(x) [2-4*b*x(2)+12*b*x(1)^2 -4*b*x(1);
+          -4*b*x(1)                2*b];       
+sol = [a a^2];
 
 
 %% Initial gesses
@@ -93,12 +95,16 @@ for chooseAlgorithm = 0:2
         p(:,k) = - H(:,:,k)*gk;
 
         %% Choose the step lenght by bisection method
-
-        t(k) = lineSearch( f, g, x(:,k), p(:,k), c1, c2 );
+        
+        if chooseStepAlg == 0
+            t(k) = bisec( f, g, x(:,k), p(:,k), c1, c2 );
+        else
+            t(k) = lineSearch( f, g, x(:,k), p(:,k), c1, c2 );
+        end
 
         %% Stop criteria
         if norm(gk) < eps
-            disp('Stoped at')
+            disp('Stopped at')
             kfinal = k
             break
         end
@@ -141,17 +147,20 @@ for chooseAlgorithm = 0:2
 
     x_error = zeros(kfinal,1);
     f_error = zeros(kfinal,1);
-    g
+    g_evol = zeros(kfinal,1);
     for i = 1:kfinal
         x_error(i) = norm(sol) - norm(x(:,i));
         f_error(i) = f(sol') - f(x(:,i));
+        g_evol(i) = norm(g(x(:,i)));
     end
 
     k = 1:kfinal;
    
-    subplot(2,1,1), plot(k,x_error), hold on, title('Error in position x')
+    subplot(3,1,1), plot(k,x_error), hold on, title('Error in position x')
     legend('DFP','BFGS','Newton Method')
-    subplot(2,1,2), plot(k,f_error), hold on, title('Error in function value')
+    subplot(3,1,2), plot(k,f_error), hold on, title('Error in function value')
+    legend('DFP','BFGS','Newton Method')
+    subplot(3,1,3), plot(k,g_evol), hold on, title('Gradient evolution')
     legend('DFP','BFGS','Newton Method')
 end
     
