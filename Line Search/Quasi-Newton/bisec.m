@@ -3,7 +3,11 @@ function [ t ] = bisec( f, g, x, p, c1, c2 )
 %conditions
 % Receives the function f and it's gradient g. And the point x and
 % direction p
-
+% This algorithm was found in a lecture from Professor James V. Burke from
+% University of Washington, Seattle. Here is the link for the algorithm 
+%(page 8): https://sites.math.washington.edu/~burke/crs/408/notes/nlp/line.pdf
+%and the autors page https://sites.math.washington.edu/~burke/ . This links
+%are working on 07/10/2018
 maxSubIter = 30; %Max iterations of the bisection algorithm
 
 beta = -1;
