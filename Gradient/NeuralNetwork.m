@@ -19,8 +19,8 @@ x_test = reshape(x_test,[400 10000]);
 %will modify the original y 
 train_size = 1000;
 test_size = 1000;
-y_train = (y_train(1:train_size) == 4);
-y_test = (y_test(1:test_size) == 4);
+y_train = y_train(1:train_size);
+y_test = y_test(1:test_size);
 x_train = x_train(:,1:train_size);
 x_test = x_test(:,1:test_size);
 
@@ -34,12 +34,6 @@ for i = 1:train_size
     aux(:,i) = (0:9)'==y_train(i);
 end
 y_train = aux;
-
-aux2 = zeros(10,test_size);
-for i = 1:test_size
-    aux(:,i) = (0:9)'==y_test(i);
-end
-y_test = aux;
 
 %%  Parameters
 
@@ -58,6 +52,7 @@ w1 = 0.1*randn(layers(2), layers(1));
 w2 = 0.1*randn(layers(3), layers(2));
 b1 = 0.1*randn(layers(2),1);
 b2 = 0.1*randn(layers(3),1);
+load('Test.mat')
 
 %% Algorithm
 
@@ -65,29 +60,41 @@ for k = 1:maxIter
     
     %Calculate the function value and derivatives with foward and back
     %propagation
-    J = 0;
-    for i = 1:m
-        [a2, dw1, db1, dw2, db2] = fpropag( w1, b1, w2, b2, x_train(:,i),...
-            y_train(:,i), activation );
-        J = J - ( y_train(i)*log(a2) + (1-y_train(i))*log(1-a2) );
-    end
-    J = sum(J)/m
     
+    [J, dw1, db1, dw2, db2] = fcost( w1, b1, w2, b2, x_train,...
+        y_train, activation );
+   
+    J
     %Gratient descent
-%     w1 = w1 - alpha*dw1;
-%     b1 = b1 - alpha*db1;
+    w1 = w1 - alpha*dw1;
+    b1 = b1 - alpha*db1;
     w2 = w2 - alpha*dw2;
     b2 = b2 - alpha*db2;
     
 end
 
+save('Test','w1','w2','b1','b2')
 
+%% Prediction
 
+y_pred = zeros(test_size,1);
 
+for i = 1:test_size
+    
+    %Foward propagation
+    z1 = w1*x_test(:,i) + b1;
+    a1 = g(z1, activation);
+    z2 = w2*a1 + b2;
+    a2 = g(z2, 'sigmoid');
 
+    %Transform in numbers again
+    [aux, val] = max(a2);
+    y_pred(i) = val - 1;
 
+end
 
-
+correct = sum(y_pred == y_test);
+accuracy = correct/test_size
 
 
 
