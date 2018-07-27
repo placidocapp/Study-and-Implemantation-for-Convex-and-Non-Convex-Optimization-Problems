@@ -23,6 +23,11 @@ elseif strcmp(fcn,'sigmoid')
     for i = 1:l
         for j = 1:c
             a(i,j) = 1/(1+exp(-z(i,j)));
+            if a(i,j) == 1
+                a(i,j) = 1-10^-4;
+            elseif a(i,j) == 0
+                a(i,j) = 10^-4;
+            end
         end
     end
 elseif strcmp(fcn,'softmax')

@@ -1,54 +1,27 @@
-function [ J, dw1, db1, dw2, db2 ] = fcost( w1, b1, w2, b2, x, y, activation )
-%Foward Propagation
 
+function [ J ] = fcost( w1, b1, w2, b2, w3, b3,...
+    x, y, activation )
 %% Initializations
-% z1 = zeros(layers(2),1);
-% z2 = zeros(layers(3),1);
-% a1 = zeros(layers(2),1);
-% a2 = zeros(layers(3),1);
+
 m = size(x,2);    %Number of training examples
-dw1 = zeros();
-db1 = zeros();
-dw2 = zeros();
-db2 = zeros();
 J = 0;
-
-%% Algorithm
-
+    
+%% Calculate the cost function
 for i = 1:m
-    %% Foward propagation
-
+    % Foward propagation
+    
     z1 = w1*x(:,i) + b1;
     a1 = g(z1, activation);
     z2 = w2*a1 + b2;
-    a2 = g(z2, 'sigmoid');
-
-    %% Back Propagation
-
-    %Last layer
-    da2 = - y(:,i)./a2 + (1-y(:,i))./(1-a2);
-    dz2 = da2.*dg(z2,'sigmoid');
-    % dz2 = a2 - y;
-    dw2 = dw2 + dz2*a1';
-    db2 = db2 + dz2;
-
-    %First layer
-    da1 = w2'*dz2;
-    dz1 = da1.*dg(z1,activation);
-    dw1 = dw1 + dz1*x(:,i)';
-    db1 = db1 + dz1;
+    a2 = g(z2, activation);
+    z3 = w3*a2 + b3;
+    a3 = g(z3, 'sigmoid');
     
     %Cost function
-    J = J - ( y(:,i).*log(a2) + (1-y(:,i)).*log(1-a2) );
-    
+    J = J - ( y(:,i).*log(a3) + (1-y(:,i)).*log(1-a3) );
 end
 
 J = sum(J)/m;
-dw1 = dw1/m;
-db1 = db1/m;
-dw2 = dw2/m;
-db2 = db2/m;
-
 
 
 

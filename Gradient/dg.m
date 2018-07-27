@@ -21,7 +21,7 @@ if strcmp(fcn,'relu')
     end
 elseif strcmp(fcn,'relu2')
     a = max(0.01*z',z')';
-    for i = 1:lenght(z,1)
+    for i = 1:length(z)
         if z(i) > 0
             a(i) = 0.01;
         else 
