@@ -10,7 +10,7 @@ clc
 %%  Parameters
 
 maxIter = 50;  %Maximun number of iterations
-n = 4;          %Dimension of the problem   
+n = 2;          %Dimension of the problem   
 eta = 0.20;     %Parameter that decides if the algorithm steps or not,
                 %the book recomends it between (0,0.25)
 how_choose_step = 1; %If 0 then choose the step with cauchy, if 1 use 
@@ -46,16 +46,35 @@ A = A'+ A;
 b = randn(n,1);
 
 %Calculate the function value and its derivatives
-f = @(x) 0.5*x'*A*x + b'*x;
-g = @(x) A*x + b;
-H = @(x) A;
+% f = @(x) 0.5*x'*A*x + b'*x;
+% g = @(x) A*x + b;
+% H = @(x) A;
+% sol = -(pinv(A)*b)';
 
+%Trigonometric function
 % f = @(x) sin(x(1))+sin(x(2));
 % g = @(x) [cos(x(1));
 %           cos(x(2))];
 % H = @(x) [  -sin(x(1)) 0;
 %             0          -sin(x(2))];
+% sol = [-1.570796327268957  -1.570796324699814];
 
+% f = @(x) -200*exp(-0.2*sqrt(x(1)^2+x(2)^2));
+% g = @(x) [(4*x(1).*exp(-(x(1).^2 + x(2).^2)^(1/2)/50))./(x(1).^2 + x(2).^2)^(1/2);
+%           (4*x(2).*exp(-(x(1).^2 + x(2).^2)^(1/2)/50))./(x(1).^2 + x(2).^2)^(1/2)];
+% H = @(x) [ (4*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(1/2) - (2*x(1)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(1)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2),                                                    - (2*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2);
+%                                                     - (2*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(1)*x(2)*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2), (4*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(1/2) - (2*x(2)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(25*(x(1)^2 + x(2)^2)) - (4*x(2)^2*exp(-(x(1)^2 + x(2)^2)^(1/2)/50))/(x(1)^2 + x(2)^2)^(3/2)] ;
+% sol = [0 0];
+
+%Rosenbrock
+a = 1;
+b = 100;
+f = @(x) (a-x(1))^2 + b*(x(2)-x(1)^2)^2; 
+g = @(x) [-2*(a - x(1))-4*b*x(1)*(x(2)-x(1)^2);
+          2*b*(x(2)-x(1)^2)];
+H = @(x) [2-4*b*x(2)+12*b*x(1)^2 -4*b*x(1);
+          -4*b*x(1)                2*b];       
+sol = [a a^2];
 
 m = @(x,p) f(x) + g(x)'*p + 0.5*p'*B(:,:,k)*p;
 
@@ -168,7 +187,6 @@ end
         
 x(end,:)
 f(x(end,:)')
-sol = -(pinv(A)*b)'
 
 %% Plot some graphs
 x_error = zeros(maxIter,1);
