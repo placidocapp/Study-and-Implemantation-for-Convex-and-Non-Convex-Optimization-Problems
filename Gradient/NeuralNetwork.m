@@ -38,7 +38,7 @@ y_train = aux;
 %%  Parameters
 
 %For the main loop
-ChooseMethod = 4;   %if 0 uses batch gradient, if 1 uses mini batch 
+ChooseMethod = 0;   %if 0 uses batch gradient, if 1 uses mini batch 
                     %gradient (note that if the mini batch has size 1 it's 
                     %a sthocastic gradient descent). if 2 use batch
                     %gradient with momentum.if 3 use desterov method
@@ -47,6 +47,7 @@ maxIter = 1000;     %Stop creteria
 grad_eps = 10^-10;  %Stop creteria
 m = size(x_train,2);    %Number of training examples
 n = size(x_train,1);    %Number of features
+eps = 10^-8;
 
 %The neural network have just 3 layers, but one can change the size of
 %them
@@ -56,7 +57,7 @@ layers = [ n; 20; 20; 10 ]; %Size of each layer, the first layer is the
 activation = 'sigmoid';     %Activation function for all but the last layer 
 
 %Gradients step length
-alpha = 0.3;              %Step lenght
+alpha = 5;              %Step lenght
 
 %Batch gradient
 batch_size = 5;
@@ -69,8 +70,15 @@ end
 %Momentum
 lambda = 0.9;
 
-%Adagrad
-forget_rate = 0.8;
+%Adadelta
+forget_rate = 1;
+
+%RMSprop
+beta = 0.5;
+
+%Adam
+beta1 = 0.9;
+beta2 = 0.9;
                        
 %% Initializations
 rng(157024)
@@ -100,12 +108,41 @@ best_b2 = zeros(size(b2));
 best_b3 = zeros(size(b3));
 
 %Variables for Adagrad
-Gw1 = zeros(size(w1,1),size(w1,1))
-Gb1 = zeros(size(b1,1),size(b1,1));
-Gw2 = zeros(size(w2,1),size(w2,1));
-Gb2 = zeros(size(b2,1),size(b2,1));
-Gw3 = zeros(size(w3,1),size(w3,1));
-Gb3 = zeros(size(b3,1),size(b3,1));
+Gw1 = zeros(size(w1));
+Gb1 = zeros(size(b1));
+Gw2 = zeros(size(w2));
+Gb2 = zeros(size(b2));
+Gw3 = zeros(size(w3));
+Gb3 = zeros(size(b3));
+
+%Variables for Adadelta
+Dw1 = zeros(size(w1));
+Db1 = zeros(size(b1));
+Dw2 = zeros(size(w2));
+Db2 = zeros(size(b2));
+Dw3 = zeros(size(w3));
+Db3 = zeros(size(b3));
+DDw1 = 0.1*rand(size(w1));
+DDb1 = 0.1*rand(size(b1));
+DDw2 = 0.1*rand(size(w2));
+DDb2 = 0.1*rand(size(b2));
+DDw3 = 0.1*rand(size(w3));
+DDb3 = 0.1*rand(size(b3));
+
+%Variables for Adam
+mw1 = zeros(size(w1));
+mb1 = zeros(size(b1));
+mw2 = zeros(size(w2));
+mb2 = zeros(size(b2));
+mw3 = zeros(size(w3));
+mb3 = zeros(size(b3));
+vw1 = rand(size(w1));
+vb1 = rand(size(b1));
+vw2 = rand(size(w2));
+vb2 = rand(size(b2));
+vw3 = rand(size(w3));
+vb3 = rand(size(b3));
+
 
 %% Algorithm
 
@@ -189,7 +226,7 @@ for k = 1:maxIter
         u5 = lambda*u5 + alpha*dw3;
         u6 = lambda*u6 + alpha*db3;
         
-        %Update the weights points
+        %Update
         w1 = w1 - u1;
         b1 = b1 - u2;
         w2 = w2 - u3;
@@ -199,24 +236,126 @@ for k = 1:maxIter
     elseif ChooseMethod == 4
         %Adagrad Gradient Descent
         %Auxiliar variable G
-        Gw1 = Gw1*forget_rate + dw1*dw1';
-        Gb1 = Gw1*forget_rate + db1*db1';
-        Gw2 = Gw2*forget_rate + dw2*dw2';
-        Gb2 = Gw2*forget_rate + db2*db2';
-        Gw3 = Gw3*forget_rate + dw3*dw3';
-        Gb3 = Gw3*forget_rate + db3*db3';
+        Gw1 = Gw1*forget_rate + dw1.^2;
+        Gb1 = Gb1*forget_rate + db1.^2;
+        Gw2 = Gw2*forget_rate + dw2.^2;
+        Gb2 = Gb2*forget_rate + db2.^2;
+        Gw3 = Gw3*forget_rate + dw3.^2;
+        Gb3 = Gb3*forget_rate + db3.^2;
         
         %Update
-        w1 = w1 - alpha/diag(Gw1).*dw1;
-        b1 = b1 - alpha/diag(Gb1).*db1;
-        w2 = w2 - alpha/diag(Gw2).*dw2;
-        b2 = b2 - alpha/diag(Gb2).*db2;
-        w3 = w3 - alpha/diag(Gw3).*dw3;
-        b3 = b3 - alpha/diag(Gb3).*db3;
+        w1 = w1 - alpha./sqrt(Gw1+eps*ones(size(dw1))).*dw1;
+        b1 = b1 - alpha./sqrt(Gb1+eps*ones(size(db1))).*db1;
+        w2 = w2 - alpha./sqrt(Gw2+eps*ones(size(dw2))).*dw2;
+        b2 = b2 - alpha./sqrt(Gb2+eps*ones(size(db2))).*db2;
+        w3 = w3 - alpha./sqrt(Gw3+eps*ones(size(dw3))).*dw3;
+        b3 = b3 - alpha./sqrt(Gb3+eps*ones(size(db3))).*db3;
+    elseif ChooseMethod == 5
+        %Adadelta Gradient Descent
+        %Auxiliar variable G
+        Gw1 = Gw1*forget_rate + (1-forget_rate)*dw1.^2;
+        Gb1 = Gb1*forget_rate + (1-forget_rate)*db1.^2;
+        Gw2 = Gw2*forget_rate + (1-forget_rate)*dw2.^2;
+        Gb2 = Gb2*forget_rate + (1-forget_rate)*db2.^2;
+        Gw3 = Gw3*forget_rate + (1-forget_rate)*dw3.^2;
+        Gb3 = Gb3*forget_rate + (1-forget_rate)*db3.^2;
+        
+        %Update Delta
+        Dw1 = - ((DDw1+eps*ones(size(dw1))).^0.5)./((Gw1+eps*ones(size(dw1))).^0.5).*dw1;
+        Db1 = - ((DDb1+eps*ones(size(db1))).^0.5)./((Gb1+eps*ones(size(db1))).^0.5).*db1;
+        Dw2 = - ((DDw2+eps*ones(size(dw2))).^0.5)./((Gw2+eps*ones(size(dw2))).^0.5).*dw2;
+        Db2 = - ((DDb2+eps*ones(size(db2))).^0.5)./((Gb2+eps*ones(size(db2))).^0.5).*db2;
+        Dw3 = - ((DDw3+eps*ones(size(dw3))).^0.5)./((Gw3+eps*ones(size(dw3))).^0.5).*dw3;
+        Db3 = - ((DDb3+eps*ones(size(db3))).^0.5)./((Gb3+eps*ones(size(db3))).^0.5).*db3;
+        
+        %Auxiliar variable D
+        DDw1 = DDw1*forget_rate + (1-forget_rate)*Dw1.^2;
+        DDb1 = DDb1*forget_rate + (1-forget_rate)*Db1.^2;
+        DDw2 = DDw2*forget_rate + (1-forget_rate)*Dw2.^2;
+        DDb2 = DDb2*forget_rate + (1-forget_rate)*Db2.^2;
+        DDw3 = DDw3*forget_rate + (1-forget_rate)*Dw3.^2;
+        DDb3 = DDb3*forget_rate + (1-forget_rate)*Db3.^2;
+        
+        %Final variable
+        w1 = w1 + Dw1;
+        b1 = b1 + Db1;
+        w2 = w2 + Dw2;
+        b2 = b2 + Db2;
+        w3 = w3 + Dw3;
+        b3 = b3 + Db3;
+        
+    elseif ChooseMethod == 6
+        %RMSprop Gradient descent
+        %Update the RMS
+        u1 = beta*u1 + (1-beta)*dw1.^2;
+        u2 = beta*u2 + (1-beta)*db1.^2;
+        u3 = beta*u3 + (1-beta)*dw2.^2;
+        u4 = beta*u4 + (1-beta)*db2.^2;
+        u5 = beta*u5 + (1-beta)*dw3.^2;
+        u6 = beta*u6 + (1-beta)*db3.^2;
+        
+        %Update 
+        w1 = w1 - alpha*dw1./sqrt(u1+eps*ones(size(dw1)));
+        b1 = b1 - alpha*db1./sqrt(u2+eps*ones(size(db1)));
+        w2 = w2 - alpha*dw2./sqrt(u3+eps*ones(size(dw2)));
+        b2 = b2 - alpha*db2./sqrt(u4+eps*ones(size(db2)));
+        w3 = w3 - alpha*dw3./sqrt(u5+eps*ones(size(dw3)));
+        b3 = b3 - alpha*db3./sqrt(u6+eps*ones(size(db3)));
+    elseif ChooseMethod == 7
+        %Adam Gradient Descent
+        %First Moment update
+        mw1 = beta1*mw1 + (1-beta1)*dw1;
+        mb1 = beta1*mb1 + (1-beta1)*db1;
+        mw2 = beta1*mw2 + (1-beta1)*dw2;
+        mb2 = beta1*mb2 + (1-beta1)*db2;
+        mw3 = beta1*mw3 + (1-beta1)*dw3;
+        mb3 = beta1*mb3 + (1-beta1)*db3;
+        
+        %Second Moment update
+        vw1 = beta2*vw1 + (1-beta2)*dw1.^2;
+        vb1 = beta2*vb1 + (1-beta2)*db1.^2;
+        vw2 = beta2*vw2 + (1-beta2)*dw2.^2;
+        vb2 = beta2*vb2 + (1-beta2)*db2.^2;
+        vw3 = beta2*vw3 + (1-beta2)*dw3.^2;
+        vb3 = beta2*vb3 + (1-beta2)*db3.^2;
+        
+        %Update
+        w1 = w1 - alpha*(mw1/(1-beta1^k))./sqrt(vw1/(1-beta2^k)+eps*ones(size(dw1)));
+        b1 = b1 - alpha*(mb1/(1-beta1^k))./sqrt(vb1/(1-beta2^k)+eps*ones(size(db1)));
+        w2 = w2 - alpha*(mw2/(1-beta1^k))./sqrt(vw2/(1-beta2^k)+eps*ones(size(dw2)));
+        b2 = b2 - alpha*(mb2/(1-beta1^k))./sqrt(vb2/(1-beta2^k)+eps*ones(size(db2)));
+        w3 = w3 - alpha*(mw3/(1-beta1^k))./sqrt(vw3/(1-beta2^k)+eps*ones(size(dw3)));
+        b3 = b3 - alpha*(mb3/(1-beta1^k))./sqrt(vb3/(1-beta2^k)+eps*ones(size(db3)));
+    elseif ChooseMethod == 8
+        %Adamax Gradient Descent
+        %First Moment update
+        mw1 = beta1*mw1 + (1-beta1)*dw1;
+        mb1 = beta1*mb1 + (1-beta1)*db1;
+        mw2 = beta1*mw2 + (1-beta1)*dw2;
+        mb2 = beta1*mb2 + (1-beta1)*db2;
+        mw3 = beta1*mw3 + (1-beta1)*dw3;
+        mb3 = beta1*mb3 + (1-beta1)*db3;
+        
+        %Second Moment update
+        vw1 = max(beta2*vw1, abs(dw1));
+        vb1 = max(beta2*vb1, abs(db1));
+        vw2 = max(beta2*vw2, abs(dw2));
+        vb2 = max(beta2*vb2, abs(db2));
+        vw3 = max(beta2*vw3, abs(dw3));
+        vb3 = max(beta2*vb3, abs(db3));
+        
+        %Update
+        w1 = w1 - alpha*(mw1/(1-beta1^k))./(vw1+eps*ones(size(dw1)));
+        b1 = b1 - alpha*(mb1/(1-beta1^k))./(vb1+eps*ones(size(db1)));
+        w2 = w2 - alpha*(mw2/(1-beta1^k))./(vw2+eps*ones(size(dw2)));
+        b2 = b2 - alpha*(mb2/(1-beta1^k))./(vb2+eps*ones(size(db2)));
+        w3 = w3 - alpha*(mw3/(1-beta1^k))./(vw3+eps*ones(size(dw3)));
+        b3 = b3 - alpha*(mb3/(1-beta1^k))./(vb3+eps*ones(size(db3)));
+        
     end
     
     %% Stop creteria
-    norm([norm(dw1) norm(db1) norm(dw2) norm(db2) norm(dw3) norm(db3)])
+%     norm([norm(dw1) norm(db1) norm(dw2) norm(db2) norm(dw3) norm(db3)])
     if norm([norm(dw1) norm(db1) norm(dw2) norm(db2) norm(dw3) norm(db3)])...
             <= grad_eps
         break;
@@ -255,7 +394,7 @@ end
 correct = sum(y_pred == y_test);
 accuracy = correct/test_size
 
-save('MiniBatchGradientWithAdagrad_100','J','time','accuracy','best_J')
+save('BatchGradient_100','J','time','accuracy','best_J')
 
 %% Plot comparisson for 10000 training examples
 
@@ -296,8 +435,16 @@ Accuracy = [Accuracy; accuracy];
 Best_Sol = [Best_Sol; best_J];
 plot(J)
 
+%Load the Mini Batch gradient with nesterov
+load('MiniBatchGradientWithAdagrad.mat')
+Time_Optimizing = [Time_Optimizing; time];
+Accuracy = [Accuracy; accuracy];
+Best_Sol = [Best_Sol; best_J];
+plot(J)
+
 Method = {'Batch Gradient'; 'Stochastic gradient';'Mini Batch Gradient';...
-    'Mini Batch Gradient With Momentum';'Mini Batch Gradient With Nesterov'};
+    'Mini Batch Gradient With Momentum';'Mini Batch Gradient With Nesterov';...
+    'Mini Batch Gradient With Modified Adagrad'};
 legend(Method)
 table(Method, Time_Optimizing, Accuracy, Best_Sol)
 
@@ -311,7 +458,7 @@ load('BatchGradient_100.mat')
 Time_Optimizing = time;
 Accuracy = accuracy;
 Best_Sol = best_J;
-plot(J), hold on
+plot(J), axis([0 1000 0 6]), hold on
 
 %Load the Stochastic gradient
 load('StochasticGradientDescent_100.mat')
@@ -348,8 +495,38 @@ Accuracy = [Accuracy; accuracy];
 Best_Sol = [Best_Sol; best_J];
 plot(J)
 
+%Load the Mini Batch gradient with nesterov
+load('MiniBatchGradientWithAdadelta_100.mat')
+Time_Optimizing = [Time_Optimizing; time];
+Accuracy = [Accuracy; accuracy];
+Best_Sol = [Best_Sol; best_J];
+plot(J)
+
+%Load the Mini Batch gradient with nesterov
+load('MiniBatchGradientWithRMSprop_100.mat')
+Time_Optimizing = [Time_Optimizing; time];
+Accuracy = [Accuracy; accuracy];
+Best_Sol = [Best_Sol; best_J];
+plot(J)
+
+%Load the Mini Batch gradient with nesterov
+load('MiniBatchGradientWithAdam_100.mat')
+Time_Optimizing = [Time_Optimizing; time];
+Accuracy = [Accuracy; accuracy];
+Best_Sol = [Best_Sol; best_J];
+plot(J,'g')
+
+%Load the Mini Batch gradient with nesterov
+load('MiniBatchGradientWithAdamax_100.mat')
+Time_Optimizing = [Time_Optimizing; time];
+Accuracy = [Accuracy; accuracy];
+Best_Sol = [Best_Sol; best_J];
+plot(J,'k')
+
 Method = {'Batch Gradient'; 'Stochastic gradient';'Mini Batch Gradient';...
     'Mini Batch Gradient With Momentum';'Mini Batch Gradient With Nesterov'...
-    ;'Mini Batch Gradient With Adagrad'};
+    ;'Mini Batch Gradient With Adagrad';'Mini Batch Gradient With Adadelta';...
+    'Mini Batch Gradient With RMSprop'; 'Mini Batch Gradient With Adam'...
+    ; 'Mini Batch Gradient With Adamax'};
 legend(Method)
 table(Method, Time_Optimizing, Accuracy, Best_Sol)
