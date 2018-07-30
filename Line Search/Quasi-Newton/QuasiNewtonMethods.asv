@@ -10,9 +10,8 @@ n = 2;         %Dimension of the problem
 c1 = 10^-4;    %c1 and c2 are the constants of wolfe conditions    
 c2 = 0.5;
 eps = 10^-8;   %Stop criteria for the gradient
-chooseAlgorithm = 3;    %If this flat equals to 0 uses de DFP method, 
-                        %if 1 uses bfgs, if 2 uses regular newton step and
-                        %finaly if 3 uses SR1add
+chooseAlgorithm = 2;    %If this flat equals to 0 uses de DFP method, 
+                        %if 1 uses bfgs and else uses regular newton step
 chooseStepAlg = 1;      %If 0 choose the bisection else choose the zoom
                         %algorithm
 chooseHessModif = 0;    %If 0 modify B with cholesky factorization if 1 
@@ -45,12 +44,12 @@ b = randn(n,1);
 % B = @(x) A;
 % sol = - (pinv(A)*b)';
 
-% f = @(x) sin(x(1))+sin(x(2));
-% g = @(x) [cos(x(1));
-%           cos(x(2))];
-% B = @(x) [  -sin(x(1)) 0;
-%             0          -sin(x(2))];
-% sol = [-1.570796327268957  -1.570796324699814];
+f = @(x) sin(x(1))+sin(x(2));
+g = @(x) [cos(x(1));
+          cos(x(2))];
+B = @(x) [  -sin(x(1)) 0;
+            0          -sin(x(2))];
+sol = [-1.570796327268957  -1.570796324699814];
 
 % f = @(x) -200*exp(-0.2*sqrt(x(1)^2+x(2)^2));
 % g = @(x) [(4*x(1).*exp(-(x(1).^2 + x(2).^2)^(1/2)/50))./(x(1).^2 + x(2).^2)^(1/2);
@@ -60,14 +59,14 @@ b = randn(n,1);
 % sol = [0 0];
 
 %Rosenbrock
-a = 1;
-b = 100;
-f = @(x) (a-x(1))^2 + b*(x(2)-x(1)^2)^2; 
-g = @(x) [-2*(a - x(1))-4*b*x(1)*(x(2)-x(1)^2);
-          2*b*(x(2)-x(1)^2)];
-B = @(x) [2-4*b*x(2)+12*b*x(1)^2 -4*b*x(1);
-          -4*b*x(1)                2*b];       
-sol = [a a^2];
+% a = 1;
+% b = 100;
+% f = @(x) (a-x(1))^2 + b*(x(2)-x(1)^2)^2; 
+% g = @(x) [-2*(a - x(1))-4*b*x(1)*(x(2)-x(1)^2);
+%           2*b*(x(2)-x(1)^2)];
+% B = @(x) [2-4*b*x(2)+12*b*x(1)^2 -4*b*x(1);
+%           -4*b*x(1)                2*b];       
+% sol = [a a^2];
 
 %% Initial gesses
 
@@ -147,11 +146,12 @@ for k = 1:maxIter
         end
     elseif chooseAlgorithm == 3
         %SR1 Update
-        aux = (s(:,k)-H(:,:,k)*y(:,k));
-        if abs( s'*aux ) >= 10^-8*norm(s)*norm(aux)   
-            H(:,:,k+1) = H(:,:,k) + aux*aux'/( aux'*s(:,k) );
-        else 
-            H(:,:,k+1) = H(:,:,k);
+        s = 
+        
+        
+        aux = (s-Bk(:,:,k)*s)
+        if abs( s'*aux ) >= r*norm(s)*norm(aux)   
+        
         end
     end
 end

@@ -18,7 +18,7 @@ how_choose_step = 1; %If 0 then choose the step with cauchy, if 1 use
 maxIterSub = 10;    %Max Iterations of the subproblem
 eps = 10^-8;        %Stop criteria to Trust region subptoblem
 
-%% Inicialization
+%% Initialization
 
 p = zeros(maxIter,n);       %Direction of the step
 ro = zeros(maxIter,1);      %rate of real decrease divided by estimatede decrease

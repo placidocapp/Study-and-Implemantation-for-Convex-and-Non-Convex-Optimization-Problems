@@ -67,7 +67,7 @@ sol = [a a^2];
 
 
 %% Initial gesses
-for chooseAlgorithm = 0:2
+for chooseAlgorithm = 0:3
     gkk = g(x(:,1));    %Gradient at initial point
     %Here i will use the hessian itself as initial point, but if you don't have
     %acess to it the initial gess should be approximately accurated, here is an
@@ -125,12 +125,20 @@ for chooseAlgorithm = 0:2
             H(:,:,k+1) = ( eye(n) - ro*s(:,k)*y(:,k)' )...
                 *H(:,:,k)*( eye(n) - ro*y(:,k)*s(:,k)' )...
                 + ro*s(:,k)*s(:,k)';
-        else
+        elseif chooseAlgorithm == 2
             %Newton method with modified hessian
             H(:,:,k+1) = pinv(B(x(:,k+1)));
             if sum(eig(H(:,:,k+1)) < 0) > 0
                [L,D] = mcfac(H(:,:,k+1));
                H(:,:,k+1) = L*D*L';
+            end
+        elseif chooseAlgorithm == 3
+            %SR1 Update
+            aux = (s(:,k)-H(:,:,k)*y(:,k));
+            if abs( s'*aux ) >= 10^-8*norm(s)*norm(aux)   
+                H(:,:,k+1) = H(:,:,k) + aux*aux'/( aux'*s(:,k) );
+            else 
+                H(:,:,k+1) = H(:,:,k);
             end
         end
     end
@@ -157,11 +165,11 @@ for chooseAlgorithm = 0:2
     k = 1:kfinal;
    
     subplot(3,1,1), plot(k,x_error), hold on, title('Error in position x')
-    legend('DFP','BFGS','Newton Method')
+    legend('DFP','BFGS','Newton Method','SR1')
     subplot(3,1,2), plot(k,f_error), hold on, title('Error in function value')
-    legend('DFP','BFGS','Newton Method')
+    legend('DFP','BFGS','Newton Method','SR1')
     subplot(3,1,3), plot(k,g_evol), hold on, title('Gradient evolution')
-    legend('DFP','BFGS','Newton Method')
+    legend('DFP','BFGS','Newton Method','SR1')
 end
     
     
