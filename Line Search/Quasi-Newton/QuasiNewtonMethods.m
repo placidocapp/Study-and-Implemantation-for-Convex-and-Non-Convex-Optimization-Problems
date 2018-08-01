@@ -4,7 +4,7 @@ clc
 
 %%  Parameters
 
-maxIter = 100;  %Maximun number of iterations
+maxIter = 5000;  %Maximun number of iterations
 maxSubIter = 30; %Max iterations of the bisection algorithm
 n = 2;         %Dimension of the problem  
 c1 = 10^-4;    %c1 and c2 are the constants of wolfe conditions    
@@ -12,9 +12,10 @@ c2 = 0.5;
 eps = 10^-8;   %Stop criteria for the gradient
 chooseAlgorithm = 3;    %If this flat equals to 0 uses de DFP method, 
                         %if 1 uses bfgs, if 2 uses regular newton step and
-                        %finaly if 3 uses SR1add
+                        %finaly if 3 uses SR1 
 chooseStepAlg = 1;      %If 0 choose the bisection else choose the zoom
-                        %algorithm
+                        %algorithm. WARINIG: method 0 just works for 1
+                        %dimesional problems
 chooseHessModif = 0;    %If 0 modify B with cholesky factorization if 1 
                         %uses the 2-norm minimization
                         
@@ -160,9 +161,9 @@ if kfinal == -1
     kfinal = maxIter;
 end
 
-x(:,kfinal)
-norm(g(x(:,kfinal)))
-f(x(:,kfinal))
+x_final = x(:,kfinal)
+grad_norm = norm(g(x(:,kfinal)))
+f_final = f(x(:,kfinal))
     
 %% Plot some graphs
 

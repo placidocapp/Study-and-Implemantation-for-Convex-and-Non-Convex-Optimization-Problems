@@ -67,7 +67,7 @@ sol = [a a^2];
 
 
 %% Initial gesses
-for chooseAlgorithm = 0:3
+for chooseAlgorithm = 0:2
     gkk = g(x(:,1));    %Gradient at initial point
     %Here i will use the hessian itself as initial point, but if you don't have
     %acess to it the initial gess should be approximately accurated, here is an
@@ -85,7 +85,7 @@ for chooseAlgorithm = 0:3
 
 %% Algorithm 
 
-
+    kfinal = maxIter;
     for k = 1:maxIter
         %% Calculate the function value and it's derivatives
         fk = f(x(:,k));
@@ -143,13 +143,9 @@ for chooseAlgorithm = 0:3
         end
     end
 
-    if kfinal == -1
-        kfinal = maxIter;
-    end
-
-    x(:,kfinal)
-    norm(g(x(:,kfinal)))
-    f(x(:,kfinal))
+    x_final = x(:,kfinal)
+    grad_norm = norm(g(x(:,kfinal)))
+    f_final = f(x(:,kfinal))
 
     %% Plot some graphs
 

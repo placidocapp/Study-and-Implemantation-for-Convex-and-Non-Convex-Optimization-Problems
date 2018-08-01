@@ -8,7 +8,7 @@ clc
 
 %% Parameters
 
-maxIter = 10000;       %Maximum number of iterations
+maxIter = 100;       %Maximum number of iterations
 n = 2;              %Dimension of the problem  
 eps = 10^-4;        %Convergence tolerance
 eta = 0.25;        %eta should belong to (0,10^-3)

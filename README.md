@@ -10,22 +10,18 @@ I'm trying to comment them a lot too, I hope this helps someone :).
 
 ## Line Search
 
-I'm just starting to implement one simple backtracking algorithm and the
-zoom algorithm of the book Numerical Optimization from Jorge Nocedal and
-Stephen J. Wright (second edition) on pages 60 and 61. I have to improve
-the way the step direction is choose and test the algorithm better because
-I was having some numerical issues.
+Here you will find the newton method and steepest gradient in one file and
+the quasi newton methods in another:
 
-In the Backtranking.m one can find an simple implementation of backtracking 
-with steepest gradient descent
+#### Newton and Steepest
 
-There is an implementation of the zoom algorithm (satisfyes wolf conditions
-on ever iteraction) in the WolfeConditions.m file (there is a backtragking 
-too, just because I was comparing the results).
-
-In the BacktrackingWithModifiedHessian.m I compared the results with the
-solution of steepest gradient descent vs a newton with modified hessian,
-in this case I just sum a diagonal matrix with the value of the most negative
-eigenvalue of the hessian.
+* backtrack.m file contains the famous backtraking algorithm
+* lineSearch.m is a function to choose the step size, it calls the zoom.m function that's a function
+describled in Numercial Optimization book that satisfies the wolfe conditions
+* mcfac.m contains a modified cholesky factorization to correct the hessian in case it is not positive definite
+* ModifiedNewtonAndSteepest.m contains the newton and steepest methods with the linesearch step and the cholesky modifications
+* SteepestDescentBacktracking.m here is the same as the last function exept that the step is choose by the backtracking algorithm
+in general backtracking is faster in each step but it's performance is worse than lineSearch method comparing the number of
+steps.
 
 
