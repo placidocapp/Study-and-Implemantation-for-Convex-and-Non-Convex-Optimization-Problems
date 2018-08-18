@@ -27,17 +27,17 @@ steps.
 
 #### Quasi-Newton
 
-*QuasiNewtonComparison.m and QuasiNewtonMethods.m are quite similar, the only difference is that in the first one all the 
+* QuasiNewtonComparison.m and QuasiNewtonMethods.m are quite similar, the only difference is that in the first one all the 
 algorithms solve the problem and in the second one you can choose your algorithm and play. The objective is to make it 
 easy to compare the methods but if one want to solve a problem the second is probably more appropriate.
-*SR1.m, the book of numerical optimizations suggests an trust region method to SR1 so I programmed it
-*bisec.m is a method to find an step length that satisfies the wolfe conditions, However I tested it and the zoom algorithm 
+* SR1.m, the book of numerical optimizations suggests an trust region method to SR1 so I programmed it
+* bisec.m is a method to find an step length that satisfies the wolfe conditions, However I tested it and the zoom algorithm 
 performs much better
 
 ## Trust Region
 
-*In the TrustRegion.m we have al the methods so you can choose one of them and run
-*TrustRegion.m just make it easy to compare the algorithms
+* In the TrustRegion.m we have al the methods so you can choose one of them and run
+* TrustRegion.m just make it easy to compare the algorithms
 
 ## Gradient
 
@@ -46,18 +46,18 @@ gradient becomes very small and the algorithms did not converge yet so maybe I a
 
 #### Logistic Regression Just for Train
 
-*Here I made a logistic regression to given a number, find out if it is a pre-selected number or not, I made it just
+* Here I made a logistic regression to given a number, find out if it is a pre-selected number or not, I made it just
 to study and learn the logistic regression before implementing the neural network itself.
 
 #### Others
 
-*NeuralNetwork.m Here I implement all the gradients and run them. Note that the algorithm gets a lot slower because I have
+* NeuralNetwork.m Here I implement all the gradients and run them. Note that the algorithm gets a lot slower because I have
 to calculate the function cost for the training set every iteration to show a graph of the evolution of each method.
 I am practice no one would calculate it every time, that slows the algorithm a lot.
-*g.m and dg.m are the activation functions and its derivatives, respectively.
-*fgrad.m do the backpropagation to calculate the derivatives of the weights on the neural network.
-*fcost.m runs every iteration to calculate the value of objective function. (for a batch of the training set)
+* g.m and dg.m are the activation functions and its derivatives, respectively.
+* fgrad.m do the backpropagation to calculate the derivatives of the weights on the neural network.
+* fcost.m runs every iteration to calculate the value of objective function. (for a batch of the training set)
 
 ## Linear Optimization
 
-*Working on that ...
+* Working on that ...
