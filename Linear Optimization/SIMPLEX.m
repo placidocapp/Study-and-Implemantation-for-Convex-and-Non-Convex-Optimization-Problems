@@ -49,8 +49,8 @@ while(1)
         minor_val = 10^10;  %The value of minor step size found
         minor_index = -1;   %The index of minor step size found
         for i = 2:(m+1)
-            if T(i,j) > 0           %If the base is positive only
-                aux = T(j,1)/T(j,i) %Step size
+            if T(i,j) > 0            %If the base is positive only
+                aux = T(j,1)/T(j,i); %Step size
                 if aux < minor_val  
                    minor_val = aux; %Update new best value
                    minor_index = i;
@@ -67,15 +67,13 @@ while(1)
             theta = minor_val;
             i = minor_index;
         end
-        i
-        j
+        
         %Now we know that (i,j) is going to enter the new basis, we just
         %need to turn the new base
         T = changebase( T, i, j );
         T
                   
     end
-    pause
 end
 
 %% Change the basis
