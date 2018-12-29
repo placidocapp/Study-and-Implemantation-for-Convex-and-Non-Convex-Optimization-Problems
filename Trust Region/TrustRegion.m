@@ -146,7 +146,7 @@ for k = 1:maxIter
             lambda(i+1) = lambda(i) + ( norm(p(k,:))/norm(q) )^2*...
             ( ( norm(p(k,:))-delta(k) )/delta(k) ); 
             
-            %Stop creteria
+            %Stop criteria
             if abs(lambda(i+1) - lambda(i)) < eps
                 break
             end

@@ -1,7 +1,5 @@
-% Algorithm from Numerical Optimization. Jorge Nocedal and Stephen J. Wright.
-% Second edition. Zoom algorithm can be found at pages 60 and 61.
-% MATLAB code by Plácido Campos
-% Last modified: july 4, 2018
+% MATLAB code by Plácido Campos based on Jorge Nocedal and Stephen J. Wright.
+% Numerical Optimization, Second Edition.
 
 clear all;
 close all;
@@ -10,23 +8,24 @@ clc
 format long;
 %% Parameters 
 
-% Wolfe conditions
-c1 = 10^-4;
+% Wolfe conditions constants
+c1 = 10^-4;        
 c2 = 0.5;
-alphaMax = 10;
+
+%Stop criteria for norm of gradient
 eps = 10^-8;
 
-%Backtracking
+%Backtracking division constant
 ro = 0.5;
 
-%Todos
+%Limit of iterations
 maxIter = 100;
 
-%Size (Selects size based on the gradient size)
+%Size of the problem (Selects size based on the gradient size)
 n = 2;
 
 kfinal = -1;        %The iteration that the algorithm stopped
-flagChooseStep = 1; %if 0 uses backtracking to choose the step lenght else 
+stepMethod = 1;     %if 0 uses backtracking to choose the step lenght else 
                     %uses the zoom algorithm
 
 %% Function
@@ -74,19 +73,23 @@ sol = [-1.570796327268957  -1.570796324699814];
 x = zeros(maxIter,n);
 x(1,:) = randn(1,n);
 
+%flag choose the method for modifying the hessian
 for flag = 0:2
-    %Backtraking loop
+    %Main loop
     for k = 1:maxIter
-
-        %Calculates the hessian, if some eigenvalue of H is negative than
-        %change the hessian for itself plus eye*|most negative eigenvalue + lambda|
+        %Calculates the hessian
         H = B(x(k,:)');
+        
+        %If some eigenvalue of H is negative, sum an escaleted eye matrix 
+        %to H
         if flag == 0
             if sum(eig(H) < 0) > 0
                 lambda = min(eig(H));
                 H = H + eye*(-lambda+0.1);
             end
             d = -inv(H)*g(x(k,:)');
+        %Do the Modified Cholesky factorization, ih H is positive definite
+        %than the result is the original H itself
         elseif flag == 1
             if sum(eig(H) < 0) > 0
                 [L,D] = mcfac(H);
@@ -98,10 +101,10 @@ for flag = 0:2
         end
 
         %Choose the step lenght
-        if flagChooseStep == 0
+        if stepMethod == 0
             alpha = backtrack( f, g, x(k,:)', d, c1, ro );
         else
-            alpha = lineSearch( f, g, x(k,:)', d, c1, c2 );
+            alpha = wolfeCond( f, g, x(k,:)', d, c1, c2 );
         end
         
         % Stop criteria
@@ -115,13 +118,14 @@ for flag = 0:2
         x(k+1,:) = (x(k,:)' + alpha*d)';
     end
 
+    %If the desired eps is not achieve than we ended in the maxIter
     if kfinal == -1
         kfinal = maxIter;
     end
     
-    x(kfinal,:)
-    norm(g(x(kfinal,:)'))
-    f(x(kfinal,:)')
+    final_x = x(kfinal,:)
+    gradient_norm = norm(g(x(kfinal,:)'))
+    final_fx = f(x(kfinal,:)')
 
     %% Plot some graphs
 
