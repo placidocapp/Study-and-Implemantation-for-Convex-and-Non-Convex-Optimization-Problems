@@ -17,24 +17,12 @@ function [x_opt, f_opt] = lineSearch(f,g,x0,B,opt,eps,maxIter,c1,c2,ro)
 %           ro: the constant for backtracking
 %           modBMethod: Method for modifying the hessian. 
 %                       'norm2' or 'modified cholesky'
-
-%% Define the size of the problem
-n = length(x0);
-
-%Test size
-if size(B(x0),1) ~= size(B(x0),2) && size(B(x0),1) ~= n
-    disp('Hessian sizes must be equal to columns in gradient')
-end
-
-if length(x0) ~= n
-    disp('Gradient and x0 must have the same size')
-end
-
+tic
 %% Define defatult variables
 
 %If B is not defined it will not be used
-if ~exist('B','var')
-    B = eye(n);
+if ~exist('B','var') || isempty(B)
+    Bexist = 0;
 else 
     Bexist = 1;
 end
@@ -64,6 +52,28 @@ end
 %If the used method is not backtracking this variable is left unused
 if ~exist('ro','var')
     ro = 0.5;
+end
+
+%Newton need the B defined
+if strcmp(opt.Algorithm,'newton') && Bexist == 0
+    disp('Newton method needs the hessian...')
+    x_opt = [];
+    f_opt = [];
+    return
+end
+
+%% Define the size of the problem
+n = length(x0);
+
+%Test size
+if Bexist == 1
+    if size(B(x0),1) ~= size(B(x0),2) && size(B(x0),1) ~= n
+        disp('Hessian sizes must be equal to columns in gradient')
+    end
+end
+
+if length(x0) ~= n
+    disp('Gradient and x0 must have the same size')
 end
 
 %% Convert strings to flags
@@ -149,7 +159,7 @@ for k = 1:maxIter
     if stepMethod == 0
         t(k) =  backtrack( f, g, x, p(:,k), c1, ro );
     elseif stepMethod == 1
-        t(k) = lineSearch( f, g, x(:,k), p(:,k), c1, c2 );
+        t(k) = wolfeCond( f, g, x(:,k), p(:,k), c1, c2 );
     elseif stepMethod == 2
         t(k) = bisec( f, g, x(:,k), p(:,k), c1, c2 );
     end
@@ -198,11 +208,11 @@ end
 %% Return
 x_opt = x(:,kfinal);
 f_opt = f(x_opt);
-disp('Best objective found = '+f_opt);
+disp(strcat(['Best objective found = ',num2str(f_opt)]))
 
-disp('Norm of gradient achieved = '+norm(g(x_opt)));
+disp(strcat(['Norm of gradient achieved = ',num2str(norm(g(x_opt)))]))
 
-disp('Number of iterations = '+kfinal);
-
+disp(strcat(['Number of iterations = ',num2str(kfinal)]))
+toc
 end
 

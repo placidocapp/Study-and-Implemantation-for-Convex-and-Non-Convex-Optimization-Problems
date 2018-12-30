@@ -68,13 +68,12 @@ sol = [a a^2];
 
 %% Chama algoritmo
 
-opt = options('newton','wolfeCond','cholesky');
+opt = options('newton','bisection','cholesky')
 %algorithm     = 'newton', 'bfgs', 'dfp', 'sr1', 'gradient'
 %stepMethod    = 'backtacking','wolfeCond','bisection'
 %modHessMethod = 'norm2', 'cholesky'
 x0 = zeros(2,1);
-[xopt, fopt] = lineSearch(f,g,x0,[],opt,10^-8,10000)
-
+lineSearch(f,g,x0,B,opt,10^-8, 1000)
                             
                             
                             

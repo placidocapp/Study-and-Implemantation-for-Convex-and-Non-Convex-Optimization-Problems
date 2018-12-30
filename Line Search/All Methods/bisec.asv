@@ -17,8 +17,7 @@ i = 0;
 gk = g(x);
 while(1)
     if f(x+t*p) > f(x) + c1*t*gk'*p
-        dalpha = gk'*p;
-        t = (-dalpha*beta^2)/( 2*(f(x+t*p)-f(x)-dalpha*beta) );
+        t = (-g(x)*beta^2)/( 2*(f(x+t*p)-f(x)-g(x)*beta) );
     elseif g(x+t*p) < c2*gk'*p
         alpha = t;
         if beta == -1
