@@ -1,5 +1,5 @@
 % MATLAB code by Plácido Campos based on Jorge Nocedal and Stephen J. Wright.
-% Numerical Optimization, Second Edition.
+% Numerical Optimization, Second Edition. 
 
 clear all;
 close all;
@@ -8,25 +8,17 @@ clc
 format long;
 %% Parameters 
 
-% Wolfe conditions constants
-c1 = 10^-4;        
-c2 = 0.5;
-
 %Stop criteria for norm of gradient
 eps = 10^-8;
 
-%Backtracking division constant
-ro = 0.5;
+%Trust region constants
+eta = 0.25;
+r = 1;
+
+n = 2;
 
 %Limit of iterations
 maxIter = 100;
-
-%Size of the problem (Selects size based on the gradient size)
-n = 2;
-
-kfinal = -1;        %The iteration that the algorithm stopped
-stepMethod = 1;     %if 0 uses backtracking to choose the step lenght else 
-                    %uses the zoom algorithm
 
 %% Function
 
@@ -68,13 +60,13 @@ sol = [a a^2];
 
 %% Chama algoritmo
 
-opt = options('newton','wolfeCond','cholesky');
-%algorithm     = 'newton', 'bfgs', 'dfp', 'sr1', 'gradient'
-%stepMethod    = 'backtacking','wolfeCond','bisection'
-%modHessMethod = 'norm2', 'cholesky'
-x0 = zeros(2,1);
-x0 = [10.13455 -5.3234];
-[xopt, fopt] = lineSearch(f,g,x0,B,opt,10^-8,1000)
+opt = options('cauchy','bfgs');
+%algorithm     = 'cauchy', 'dogleg', 'subproblem'
+%hessAprox     = 'none', 'sr1', 'dfp', 'bfgs'
+x0 = randn(2,1);
+% x0 = [-3 10.234];
+% x0 = [1.6534 0.74523];
+trustRegion(f,g,x0,[],opt)
 
                             
                             

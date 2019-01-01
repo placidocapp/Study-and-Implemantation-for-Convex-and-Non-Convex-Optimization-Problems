@@ -98,39 +98,41 @@ for how_choose_step = 0:2
         aux = gk'*B(:,:,k)*gk;
         %Cauchy algorithm
         if how_choose_step == 0
-            if aux >= 0
+            if aux <= 0
                 tau(k) = 1;
             else 
                 tau(k) = min( 1, norm(gk)^3/(delta(k)*aux) );
             end
             p(k,:) = - tau(k)*delta(k)*gk/norm(gk);
         elseif how_choose_step == 1
-            %Dogleg Method from Numerical optimization page 87
-            pu(k,:) = - pinv(B(:,:,k))*g(x(k,:)');
-            pb(k,:) = - gk'*gk/(aux)*gk;
+            %Dogleg Method from Numerical optimization page 74
+            pu(k,:) = - gk'*gk/(aux)*gk;
+            pb(k,:) = - pinv(B(:,:,k))*gk;
 
             %Find tau
-            if norm(pu(k,:)) > delta(k)
-                %If pu is already bigger than the trust regian then choose tau
-                %to the limit
-                tau(k) = delta(k)/norm(pu(k,:));
-            elseif norm(pb(k,:)) <= delta(k)
+            if norm(pb(k,:)) <= delta(k)
                 %if pb is inside the trust region than we can go with it
                 tau(k) = 2;
             else
                 %If tau is between 1 and 2 then we find the maximum feasible
                 %tau
-                sol = solve(norm( pu(k,:) + ...
-                    (tau_aux-1)*(pb(k,:) - pu(k,:)) )^2 == delta(k)^2, tau_aux);
-                res = eval(sol)
-                tau(k) = max(eval(sol));
-           end
-            %Choose next path direction based on tau
-            if tau(k) < 1
-                p(k,:) = tau(k)*pu(k,:);
-            else 
-                p(k,:) = pu(k,:) + (tau(k) - 1)*( pb(k,:) - pu(k,:) );
+                %Closed formula solution
+                aux = (pb(k,:) - pu(k,:))';
+                a = aux'*aux;
+                b = 2*pu(k,:)*aux;
+                c = pu(k,:)*pu(k,:)' - delta(k)^2;
+                alpha = [(-b + sqrt(b^2-4*a*c))/(2*a);
+                         (-b - sqrt(b^2-4*a*c))/(2*a)];
+                if sum(imag(alpha)) > 0
+                    disp('numeric error')
+                    kfinal = k;
+                    break
+                end
+                tau(k) = 1 + max(alpha);
             end
+
+            %Choose next path direction based on tau
+            p(k,:) = pu(k,:) + (tau(k) - 1)*( pb(k,:) - pu(k,:) );
         else
             %Trust Region Subproblem
             for i = 1:maxIterSub
@@ -191,7 +193,7 @@ for how_choose_step = 0:2
     k = 1:maxIter;
     subplot(2,1,1), plot(k,x_error), title('Error in position x'),hold on
     legend('Cauchy Point','Dogleg','Subproblem')
-    subplot(2,1,2), plot(k,x_error), title('Error in function value'),hold on
+    subplot(2,1,2), plot(k,f_error), title('Error in function value'),hold on
     legend('Cauchy Point','Dogleg','Subproblem')
 end
         

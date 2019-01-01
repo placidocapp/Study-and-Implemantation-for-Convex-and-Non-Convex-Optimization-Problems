@@ -9,14 +9,15 @@ clc
 
 %%  Parameters
 
-maxIter = 50;  %Maximun number of iterations
+maxIter = 1000;  %Maximun number of iterations
 n = 2;          %Dimension of the problem   
 eta = 0.20;     %Parameter that decides if the algorithm steps or not,
                 %the book recomends it between (0,0.25)
-how_choose_step = 1; %If 0 then choose the step with cauchy, if 1 use 
+how_choose_step = 3; %If 0 then choose the step with cauchy, if 1 use 
                      %dogleg else use the subproblem technique 
 maxIterSub = 10;    %Max Iterations of the subproblem
 eps = 10^-8;        %Stop criteria to Trust region subptoblem
+kfinal  = maxIter;
 
 %% Initialization
 
@@ -86,6 +87,12 @@ for k = 1:maxIter
     gk = g(x(k,:)');
     fk = f(x(k,:)');
     
+    %Stop criteria
+    if norm(gk) < eps
+        kfinal = k;
+        break
+    end
+    
     %Check if B is semidefinite positive, if not then correct it with
     %modified cholesky factorization
     if sum(eig(B(:,:,k)) < 0) > 0
@@ -95,51 +102,54 @@ for k = 1:maxIter
     
     %% Solve argmin mk(p) to find pk
     aux = gk'*B(:,:,k)*gk;
-    %Cauchy algorithm
+    
     if how_choose_step == 0
-        if aux >= 0
+        %Cauchy algorithm
+        if aux <= 0
             tau(k) = 1;
         else 
             tau(k) = min( 1, norm(gk)^3/(delta(k)*aux) );
         end
         p(k,:) = - tau(k)*delta(k)*gk/norm(gk);
     elseif how_choose_step == 1
-        %Dogleg Method from Numerical optimization page 87
+        %Dogleg Method from Numerical optimization page 74
         pu(k,:) = - gk'*gk/(aux)*gk;
         pb(k,:) = - pinv(B(:,:,k))*gk;
 
         %Find tau
-        if norm(pu(k,:)) > delta(k)
-            %If pu is already bigger than the trust regian then choose tau
-            %to the limit
-            tau(k) = delta(k)/norm(pu(k,:));
-        elseif norm(pb(k,:)) <= delta(k)
+        if norm(pb(k,:)) <= delta(k)
             %if pb is inside the trust region than we can go with it
             tau(k) = 2;
         else
             %If tau is between 1 and 2 then we find the maximum feasible
             %tau
-            sol = solve(norm( pu(k,:) + ...
-                (tau_aux-1)*(pb(k,:) - pu(k,:)) )^2 == delta(k)^2, tau_aux);
-            res = eval(sol)
-            tau(k) = max(eval(sol));
+            %Closed formula solution
+            aux = (pb(k,:) - pu(k,:))';
+            a = aux'*aux;
+            b = 2*pu(k,:)*aux;
+            c = pu(k,:)*pu(k,:)' - delta(k)^2;
+            alpha = [(-b + sqrt(b^2-4*a*c))/(2*a);
+                     (-b - sqrt(b^2-4*a*c))/(2*a)];
+            if sum(imag(alpha)) > 0
+                disp('numeric error')
+                kfinal = k;
+                break
+            end
+            tau(k) = 1 + max(alpha);
         end
     
         %Choose next path direction based on tau
-        if tau(k) <= 1
-            p(k,:) = tau(k)*pu(k,:);
-        else 
-            p(k,:) = pu(k,:) + (tau(k) - 1)*( pb(k,:) - pu(k,:) );
-        end
+        p(k,:) = pu(k,:) + (tau(k) - 1)*( pb(k,:) - pu(k,:) );
     else
         %Trust Region Subproblem
         for i = 1:maxIterSub
             %If B + lambda*I <= 0 than correct lambda
             aux2 = eig(B(:,:,k)+lambda(i)*eye(n));
             if sum(aux2 < 0) > 0
-                lambda(i) = lambda(i)-min(aux2)+eps;
+                lambda(i) = lambda(i)-min(aux2)+0.1;
             end
-                
+              
+            %Call cholesky decomposition
             R = chol(B(:,:,k)+lambda(i)*eye(n));
             p(k,:) = -pinv(R'*R)*gk;
             q = pinv(R')*p(k,:)';
@@ -150,9 +160,20 @@ for k = 1:maxIter
             if abs(lambda(i+1) - lambda(i)) < eps
                 break
             end
+            
+            %Numeric error
+            if abs(lambda(i+1)) > 10^300
+                disp('numeric error')
+                kfinal = k;
+                break 
+            end
         end
-        %Gess the initial lambda equals to the last one
-        lambda(1) = lambda(i);
+        
+        if kfinal ~= maxIter
+            break;
+        end
+       
+        lambda(1) = 1;
     end
     %% Decide to step or to rise/decrease the area delta
     
@@ -182,11 +203,12 @@ for k = 1:maxIter
     else
         x(k+1,:) = x(k,:);
     end
-    k
 end
         
-x(end,:)
-f(x(end,:)')
+x_opt = x(kfinal,:)
+f_opt = f(x(kfinal,:)')
+g_norm = norm(gk)
+k_opt = kfinal
 
 %% Plot some graphs
 x_error = zeros(maxIter,1);
@@ -200,7 +222,7 @@ k = 1:maxIter;
 subplot(2,1,1), plot(k,x_error), title('Error in position x')
 subplot(2,1,2), plot(k,f_error), title('Error in function value')
         
-        
+  
         
         
         

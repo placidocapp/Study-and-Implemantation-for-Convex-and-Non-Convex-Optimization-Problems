@@ -12,7 +12,7 @@ function [x_opt, f_opt] = lineSearch(f,g,x0,B,opt,eps,maxIter,c1,c2,ro)
 %           c2: second constant on wolfe conditions
 %           eps: expected norm of gradient
 %           maxIter: max number of iterations
-%           stepMethod: método de escolha do passo. 'backtracking' or 
+%           stepMethod:  'backtracking' or 
 %                       'wolfe conditions'
 %           ro: the constant for backtracking
 %           modBMethod: Method for modifying the hessian. 
@@ -109,15 +109,14 @@ if strcmp(opt.Modified_Hessian_Method,'norm2')
 elseif strcmp(opt.Modified_Hessian_Method,'cholesky')
     modMethod = 1; 
 else   
-    disp('Method for choose the step length not recognized')
+    disp('Method for modify the hessian not recognized')
     return
 end
 
 %% Declarations
     
 x = zeros(n,maxIter);   %Position of the search
-% x(:,1) = randn(n,1);
-x(:,1) = [-1.2 1];
+x(:,1) = x0;
 p = zeros(n,maxIter);   %Direction 
 H = zeros(n,n,maxIter); %Inverse of the aproxximate hessian
 y = zeros(n,maxIter);   %yk = g(k+1) - g(k)
@@ -127,14 +126,21 @@ kfinal = maxIter;       %The iteration that the algorithm stopped
 
 %% Inicialization
     
-gkk = g(x0(:,1));    %Gradient at initial point
+gkk = g(x(:,1));    %Gradient at initial point
 
 %If B is available calculate it the first time
 if Bexist == 1
     H(:,:,1) = pinv(B(x(:,1)));
-    if sum(eig(H(:,:,1)) < 0) > 0
-        [L,D] = mcfac(H(:,:,1));
-        H(:,:,1) = L*D*L';
+    if modMethod == 0
+        if sum(eig(H(:,:,1)) < 0) > 0
+            lambda = min(eig(H(:,:,1)));
+            H(:,:,1) = H(:,:,1) + eye*(-lambda+0.1);
+        end
+    elseif modMethod == 1
+        if sum(eig(H(:,:,1)) < 0) > 0
+            [L,D] = mcfac(H(:,:,1));
+            H(:,:,1) = L*D*L';
+        end
     end
 else
     %In case B is not available uses an gest
@@ -190,9 +196,17 @@ for k = 1:maxIter
     elseif algorithm == 2
         %Newton method with modified hessian
         H(:,:,k+1) = pinv(B(x(:,k+1)));
-        if sum(eig(H(:,:,k+1)) < 0) > 0
-           [L,D] = mcfac(H(:,:,k+1));
-           H(:,:,k+1) = L*D*L';
+        
+        if modMethod == 0
+            if sum(eig(H(:,:,k+1)) < 0) > 0
+                lambda = min(eig(H(:,:,k+1)));
+                H(:,:,k+1) = H(:,:,k+1) + eye*(-lambda+0.1);
+            end
+        elseif modMethod == 1
+            if sum(eig(H(:,:,k+1)) < 0) > 0
+               [L,D] = mcfac(H(:,:,k+1));
+               H(:,:,k+1) = L*D*L';
+            end
         end
     elseif algorithm == 3
         %SR1 Update
@@ -202,6 +216,9 @@ for k = 1:maxIter
         else 
             H(:,:,k+1) = H(:,:,k);
         end
+     elseif algorithm == 3
+         %Gradient
+         H(:,:,k+1) = eye(n);
     end
 end
 

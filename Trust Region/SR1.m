@@ -11,7 +11,7 @@ clc
 maxIter = 100;       %Maximum number of iterations
 n = 2;              %Dimension of the problem  
 eps = 10^-4;        %Convergence tolerance
-eta = 0.25;        %eta should belong to (0,10^-3)
+eta = 0.25;         %eta should belong to (0,1/4)
 r = 10^0;           %r in (0,1)
 delta0 = 1;         %Initial radius of trust region
 
@@ -19,7 +19,6 @@ delta0 = 1;         %Initial radius of trust region
 
 x = randn(n,maxIter);
 Bk = zeros(n,n,maxIter);
-syms tau_aux; 
 
 %% Function
 
@@ -86,27 +85,29 @@ for k = 1:(maxIter-1)
     pb = - H*gk;
     
     %Find tau
-    if norm(pu) > delta
-        %If pu is already bigger than the trust regian then choose tau
-        %to the limit
-        tau = delta/norm(pu);
-    elseif norm(pb) <= delta
+    if norm(pb) <= delta
         %if pb is inside the trust region than we can go with it
         tau = 2;
     else
         %If tau is between 1 and 2 then we find the maximum feasible
         %tau
-        res = solve(norm( pu + ...
-            (tau_aux-1)*(pb - pu) )^2 == delta^2, tau_aux);
-        tau = max(eval(res));
+        %Closed formula solution
+        aux = (pb - pu);
+        a = aux'*aux;
+        b = 2*pu'*aux;
+        c = pu'*pu - delta^2;
+        alpha = [(-b + sqrt(b^2-4*a*c))/(2*a);
+                 (-b - sqrt(b^2-4*a*c))/(2*a)];
+        if sum(imag(alpha)) > 0
+            disp('numeric error')
+            kfinal = k;
+            break
+        end
+        tau = 1 + max(alpha);
     end
     
-    %Choose next path direction based on tau
-    if tau <= 1
-        s = tau*pu;
-    else 
-        s = pu + (tau - 1)*( pb - pu );
-    end
+    %Choose next path direction based on tau 
+    s = pu + (tau - 1)*( pb - pu );
     
     %% Algorithm
     

@@ -12,29 +12,17 @@ function [x_opt, f_opt] = lineSearch(f,g,x0,B,opt,eps,maxIter,c1,c2,ro)
 %           c2: second constant on wolfe conditions
 %           eps: expected norm of gradient
 %           maxIter: max number of iterations
-%           stepMethod: método de escolha do passo. 'backtracking' or 
+%           stepMethod:  'backtracking' or 
 %                       'wolfe conditions'
 %           ro: the constant for backtracking
 %           modBMethod: Method for modifying the hessian. 
 %                       'norm2' or 'modified cholesky'
 tic
-%% Define the size of the problem
-n = length(x0);
-
-%Test size
-if size(B(x0),1) ~= size(B(x0),2) && size(B(x0),1) ~= n
-    disp('Hessian sizes must be equal to columns in gradient')
-end
-
-if length(x0) ~= n
-    disp('Gradient and x0 must have the same size')
-end
-
 %% Define defatult variables
 
 %If B is not defined it will not be used
-if ~exist('B','var')
-    B = eye(n);
+if ~exist('B','var') || isempty(B)
+    Bexist = 0;
 else 
     Bexist = 1;
 end
@@ -64,6 +52,28 @@ end
 %If the used method is not backtracking this variable is left unused
 if ~exist('ro','var')
     ro = 0.5;
+end
+
+%Newton need the B defined
+if strcmp(opt.Algorithm,'newton') && Bexist == 0
+    disp('Newton method needs the hessian...')
+    x_opt = [];
+    f_opt = [];
+    return
+end
+
+%% Define the size of the problem
+n = length(x0);
+
+%Test size
+if Bexist == 1
+    if size(B(x0),1) ~= size(B(x0),2) && size(B(x0),1) ~= n
+        disp('Hessian sizes must be equal to columns in gradient')
+    end
+end
+
+if length(x0) ~= n
+    disp('Gradient and x0 must have the same size')
 end
 
 %% Convert strings to flags
@@ -99,7 +109,7 @@ if strcmp(opt.Modified_Hessian_Method,'norm2')
 elseif strcmp(opt.Modified_Hessian_Method,'cholesky')
     modMethod = 1; 
 else   
-    disp('Method for choose the step length not recognized')
+    disp('Method for modify the step length not recognized')
     return
 end
 
@@ -122,9 +132,16 @@ gkk = g(x0(:,1));    %Gradient at initial point
 %If B is available calculate it the first time
 if Bexist == 1
     H(:,:,1) = pinv(B(x(:,1)));
-    if sum(eig(H(:,:,1)) < 0) > 0
-        [L,D] = mcfac(H(:,:,1));
-        H(:,:,1) = L*D*L';
+    if modMethod == 0
+        if sum(eig(H(:,:,1)) < 0) > 0
+            lambda = min(eig(H(:,:,1)));
+            H(:,:,1) = H(:,:,1) + eye*(-lambda+0.1);
+        end
+    elseif modMethod == 1
+        if sum(eig(H(:,:,1)) < 0) > 0
+            [L,D] = mcfac(H(:,:,1));
+            H(:,:,1) = L*D*L';
+        end
     end
 else
     %In case B is not available uses an gest
@@ -180,9 +197,17 @@ for k = 1:maxIter
     elseif algorithm == 2
         %Newton method with modified hessian
         H(:,:,k+1) = pinv(B(x(:,k+1)));
-        if sum(eig(H(:,:,k+1)) < 0) > 0
-           [L,D] = mcfac(H(:,:,k+1));
-           H(:,:,k+1) = L*D*L';
+        
+        if modMethod == 0
+            if sum(eig(H(:,:,k+1)) < 0) > 0
+                lambda = min(eig(H(:,:,k+1)));
+                H(:,:,k+1) = H(:,:,k+1) + eye*(-lambda+0.1);
+            end
+        elseif modMethod == 1
+            if sum(eig(H(:,:,k+1)) < 0) > 0
+               [L,D] = mcfac(H(:,:,k+1));
+               H(:,:,k+1) = L*D*L';
+            end
         end
     elseif algorithm == 3
         %SR1 Update
@@ -192,6 +217,9 @@ for k = 1:maxIter
         else 
             H(:,:,k+1) = H(:,:,k);
         end
+     elseif algorithm == 3
+         %Gradient
+         H(:,:,k+1) = eye(n);
     end
 end
 
