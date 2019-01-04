@@ -71,11 +71,13 @@ n = length(x0);
 if Bexist == 1
     if size(B(x0),1) ~= size(B(x0),2) && size(B(x0),1) ~= n
         disp('Hessian sizes must be equal to columns in gradient')
+        return
     end
 end
 
 if length(x0) ~= n
     disp('Gradient and x0 must have the same size')
+    return
 end
 %% Convert strings to flags
 

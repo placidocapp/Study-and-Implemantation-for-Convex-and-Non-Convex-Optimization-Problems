@@ -9,7 +9,6 @@ J = 0;
 %% Calculate the cost function
 for i = 1:m
     % Foward propagation
-    
     z1 = w1*x(:,i) + b1;
     a1 = g(z1, activation);
     z2 = w2*a1 + b2;

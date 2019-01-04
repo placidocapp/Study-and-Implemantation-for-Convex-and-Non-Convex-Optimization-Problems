@@ -38,7 +38,7 @@ y_train = aux;
 %%  Parameters
 
 %For the main loop
-ChooseMethod = 5;   %if 0 uses batch gradient, if 1 uses mini batch 
+ChooseMethod = 4;   %if 0 uses batch gradient, if 1 uses mini batch 
                     %gradient (note that if the mini batch has size 1 it's 
                     %a sthocastic gradient descent). if 2 use batch
                     %gradient with momentum.if 3 use desterov method
@@ -57,7 +57,7 @@ layers = [ n; 20; 20; 10 ]; %Size of each layer, the first layer is the
 activation = 'sigmoid';     %Activation function for all but the last layer 
 
 %Gradients step length
-alpha = 0.1;              %Step lenght
+alpha = 5;              %Step lenght
 
 %Batch gradient [0, m]
 batch_size = m;      
@@ -71,7 +71,7 @@ end
 lambda = 0.2;
 
 %Adadelta
-forget_rate = 0.8;
+forget_rate = 1;
 
 %RMSprop
 beta = 0.5;
@@ -116,12 +116,12 @@ Gw3 = zeros(size(w3));
 Gb3 = zeros(size(b3));
 
 %Variables for Adadelta
-Dw1 = rand(size(w1));
-Db1 = rand(size(b1));
-Dw2 = rand(size(w2));
-Db2 = rand(size(b2));
-Dw3 = rand(size(w3));
-Db3 = rand(size(b3));
+Dw1 = zeros(size(w1));
+Db1 = zeros(size(b1));
+Dw2 = zeros(size(w2));
+Db2 = zeros(size(b2));
+Dw3 = zeros(size(w3));
+Db3 = zeros(size(b3));
 DDw1 = 0.1*rand(size(w1));
 DDb1 = 0.1*rand(size(b1));
 DDw2 = 0.1*rand(size(w2));
