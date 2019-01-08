@@ -1,0 +1,34 @@
+clear all;
+close all;
+clc
+
+%% Problem
+
+%   min c'*x
+%   subject to
+%       A*x   <= b
+%       Aeq*x == beq
+
+c = -[10; 12; 12];
+A = [-1 0;
+     0 -1];
+b = [-4; -5];
+Aeq = [1 1];
+beq = [20];
+
+%Solution
+cvx_begin quiet
+variables x(2)
+minimize(c'*x)
+subject to
+    A*x <= b
+    Aeq*x == beq
+cvx_end
+
+cvx_status
+x
+cvx_optval
+
+%% Call lp
+
+[x_opt,y_opt] = lp(c,A,b,Aeq,beq)
