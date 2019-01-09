@@ -1,10 +1,10 @@
-function [x_opt,f_opt] = lp(c,A,b,Aeq,beq)
+function [x_opt,f_opt,status] = lp(c,A,b,Aeq,beq)
 %lp is a function for solving linear problems
 %The entrys are similar to linprog (matlab function)
 %           f: the function to me minimized
 %           A and b: The values to form an inequality system Ax <= b
 %           Aeq and beq: The values to form an equality system Aeqx <= beq
-
+tic
 %% Define variables
 if ~exist('Aeq','var')
     Aeq = [];
@@ -32,6 +32,7 @@ end
 m = size(A,1) + size(Aeq,1);    %number of constrains
 n = size(A,2);                  %number of variables
 na = size(A,1);                 %number of slack variables
+ny = m - size(A,1);             %number of extra variables
 
 %Get together all restrictions
 A = [A; Aeq];
@@ -44,7 +45,7 @@ A = [A, eye(m)];
 %% Fist Phase - Find an Feasible Solution
 
 %Initial solution to auxiliary problem
-x0 = [zeros(n,1); b]
+x0 = [zeros(n,1); b];
 
 %Vector with base variables
 base = (n+1):(n+m);
@@ -53,14 +54,25 @@ base = (n+1):(n+m);
 %to find an initial solution
 if na < m
     %Auxiliary c
-    caux = [zeros(n,1); ones(m,1)];
+    caux = [zeros(n-ny+m,1); ones(ny,1)];
 
-    [x0, fo] = simplex(c,A,b,x0,base)
+    [x0, f0, status] = simplex(caux,A,b,x0,base,ny);
+    
+    if strcmp(status,'infeasible') || strcmp(status,'unbounded')
+        x_opt = x0;
+        f_opt = f0;
+        toc
+        return;
+    end
+    
+    %If the problem have an feasible initial solution 
+    %remove the extra variables
+    A = A(:,1:(n-na));
 end
 
 %Given an initial condition, solve the problem
-[x_opt, f_opt] = simplex(c,A,b,x0,base)
+[x_opt, f_opt, status] = simplex(c,A,b,x0,base);
 
-
+toc
 end
 
