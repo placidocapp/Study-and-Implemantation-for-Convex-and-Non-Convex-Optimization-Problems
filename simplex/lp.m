@@ -29,49 +29,9 @@ if size(Aeq,2) ~=  + size(A,2) && ~isempty(Aeq)
     return
 end
 
-m = size(A,1) + size(Aeq,1);    %number of constrains
-n = size(A,2);                  %number of variables
-na = size(A,1);                 %number of slack variables
-ny = m - size(A,1);             %number of extra variables
+%% Call Simplex
 
-%Get together all restrictions
-A = [A; Aeq];
-b = [b; beq];
-c = [c; zeros(m,1)];
-
-%Slack variables and aditional variables
-A = [A, eye(m)];
-                                            
-%% Fist Phase - Find an Feasible Solution
-
-%Initial solution to auxiliary problem
-x0 = [zeros(n,1); b];
-
-%Vector with base variables
-base = (n+1):(n+m);
-
-%If there are not enought slack variables, than use the extra variables 
-%to find an initial solution
-if na < m
-    %Auxiliary c
-    caux = [zeros(n-ny+m,1); ones(ny,1)];
-
-    [x0, f0, status] = simplex(caux,A,b,x0,base,ny);
-    
-    if strcmp(status,'infeasible') || strcmp(status,'unbounded')
-        x_opt = x0;
-        f_opt = f0;
-        toc
-        return;
-    end
-    
-    %If the problem have an feasible initial solution 
-    %remove the extra variables
-    A = A(:,1:(n-na));
-end
-
-%Given an initial condition, solve the problem
-[x_opt, f_opt, status] = simplex(c,A,b,x0,base);
+[x_opt,f_opt,status] = simplex(c,A,b,Aeq,beq);
 
 toc
 end
