@@ -47,16 +47,16 @@ if ny > 0
     c = [zeros(n-ny+m,1); ones(ny,1)];
     
     %Initial Tableau
-    disp('Tableau inicial ...')
+%     disp('Tableau inicial ...')
     tableau = [-c'*x0,    -c(base)'*A(:,1:(n-ny)), zeros(1,ny);
-               x0(base),  A]
+               x0(base),  A];
     
     %Solve the tableau
     [tableau, status] = solveTableau(tableau,m,n);
     
-    disp('Tableau resolvido ...')
-    tableau
-    status
+%     disp('Tableau resolvido ...')
+    tableau;
+    status;
     
     if strcmp(status,'unbounded') == 1
         disp('It should not happen');
@@ -119,8 +119,8 @@ if ny > 0
         end
     end
     
-    disp('Tableau removendo variáveis extras ...')
-    tableau
+%     disp('Tableau removendo variáveis extras ...')
+    tableau;
     
     %In the case we solved the tableau with extra variables correct than
     %just remove the extra variables
@@ -139,22 +139,19 @@ if ny > 0
     for i = 2:(n+1)
         if isbase(tableau,i)
             x0(i-1) = tableau(tableau(:,i) == 1,1);
-            [aux, k] = max(tableau(:,i));   %insert in the base
-            base(cnt) = k - 1;
-            cnt = cnt + 1;
+            [aux,k] = max(tableau(:,i));    %Position of one in column     
+            base(k-1) = i - 1;
         end
     end
-    
+
     %Now add the original cost to tableau
     tableau(1,1) = -c'*x0;
     for i = 2:(n+1)
-        if ~isbase(tableau,i)
-            tableau(1,i) = c(i-1) - c(base)'*tableau(2:end,i);
-        end
+        tableau(1,i) = c(i-1) - c(base)'*tableau(2:end,i);
     end
 end
-disp('Tableau entrando na fase 2 ...')
-tableau
+% disp('Tableau entrando na fase 2 ...')
+tableau;
 
 %% Phase 2
 
@@ -166,8 +163,8 @@ end
 
 [tableau, status] = solveTableau(tableau,m,n);
 
-disp('Tableau final ...')
-tableau
+% disp('Tableau final ...')
+tableau;
 %% Return
 
 %Return x_opt and f_opt
@@ -178,6 +175,6 @@ for i = 2:(n+1-na)
     end
 end
 
-f_opt = tableau(1,1);
+f_opt = -tableau(1,1);
 
 end
