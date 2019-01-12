@@ -1,4 +1,4 @@
-function [x_opt,f_opt,status] = lp(c,A,b,Aeq,beq)
+function [x_opt,f_opt,status] = lp(c,A,b,Aeq,beq,opt)
 %lp is a function for solving linear problems
 %The entrys are similar to linprog (matlab function)
 %           f: the function to me minimized
@@ -30,9 +30,11 @@ if size(Aeq,2) ~=  + size(A,2) && ~isempty(Aeq)
 end
 
 %% Call Simplex
-
+if opt == 1
 [x_opt,f_opt,status] = simplex(c,A,b,Aeq,beq);
-
+else
+[x_opt,f_opt,status] = simplex_revised(c,A,b,Aeq,beq);
+end    
 toc
 end
 

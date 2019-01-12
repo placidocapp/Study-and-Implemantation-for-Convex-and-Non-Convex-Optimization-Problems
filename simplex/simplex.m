@@ -1,5 +1,5 @@
 function [x_opt,f_opt,status] = simplex(c,A,b,Aeq,beq)
-%simpex is na algorithm for solving linear problems
+%simplex is na algorithm for solving linear problems
 %Here A is already made of equality constrains
 %       min c'*x
 %       subject to

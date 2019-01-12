@@ -17,19 +17,19 @@ clc
 % A = [0 0 3];
 % b = [1];
 
-c = [10; 8; 9];
-A = [0 2 1
-     0 1 0
-     1 0 0];
+c = [10; 8; 9; 5];
+A = [0 2 1 5
+     0 2 1 6
+     1 0 0 1];
 b = [4; 8; 6];
-Aeq = [1 2 3;
-       0 0 1];
+Aeq = [1 2 3 6;
+       0 0 1 0];
 beq = [10; 1];
 
 
 %Solution
 cvx_begin quiet
-variables x(3)
+variables x(4)
 minimize(c'*x)
 subject to
     A*x <= b
@@ -43,4 +43,4 @@ cvx_optval
 
 %% Call lp
 
-[x_opt,f_opt,status] = lp(c,A,b,Aeq,beq)
+[x_opt,f_opt,status] = lp(c,A,b,Aeq,beq,1)
