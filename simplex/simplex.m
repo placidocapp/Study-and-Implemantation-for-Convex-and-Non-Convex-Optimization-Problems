@@ -3,7 +3,8 @@ function [x_opt,f_opt,status] = simplex(c,A,b,Aeq,beq)
 %Here A is already made of equality constrains
 %       min c'*x
 %       subject to
-%           A*x = b
+%           A*x <= b
+%           Aeqx = beq
 
 %% Variables
 
