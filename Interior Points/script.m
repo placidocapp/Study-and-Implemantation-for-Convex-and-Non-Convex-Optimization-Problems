@@ -9,17 +9,22 @@ clc
 %       A*x == b
 
 c = [10; 8; 9; 5];
-A = [0 2 1 0
-     0 2 1 6
-     1 0 0 1];
-b = [4; 8; 6];
+Aeq = [1 0 0 0
+       0 1 0 0];
+beq = [1; 0];
+A = [1 0 0 0;
+     0 1 0 0;
+     0 0 1 0;
+     0 0 0 1];
+b = [2;2;2;2];
 
 %Solution
 cvx_begin quiet
 variables x(4)
 minimize(c'*x)
 subject to
-    A*x == b
+    A*x <= b
+    Aeq*x == beq
     x >= 0
 cvx_end
 
@@ -29,4 +34,4 @@ cvx_optval
 
 %% Call lp
 
-[x_opt,f_opt,status] = lp(c,A,b,q,1)
+[x_opt,f_opt,status] = lp(c,A,b,Aeq,beq)

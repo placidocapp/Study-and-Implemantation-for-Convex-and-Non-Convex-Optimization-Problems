@@ -17,12 +17,12 @@ ny = m - size(A,1);             %number of extra variables
 A = [A; Aeq];
 b = [b; beq];
 
-if m ~= length(b)
+if m ~= length(b) && ~isempty(A)
     disp('Number of elements in b and lines in A must be equal');
     return
 end
 
-if n ~= length(c)
+if n ~= length(c) && ~isempty(A)
     disp('Number of elements in c and columns in A must be equal');
     return
 end
