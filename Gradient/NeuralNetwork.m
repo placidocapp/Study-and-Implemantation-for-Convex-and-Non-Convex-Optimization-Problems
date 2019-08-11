@@ -17,8 +17,8 @@ x_test = reshape(x_test,[400 10000]);
 
 %The logistic regression can only classify into two different groups, so i
 %will modify the original y 
-train_size = 100;
-test_size = 100;
+train_size = 1000;
+test_size = 1000;
 y_train = y_train(1:train_size);
 y_test = y_test(1:test_size);
 x_train = x_train(:,1:train_size);
@@ -38,7 +38,7 @@ y_train = aux;
 %%  Parameters
 
 %For the main loop
-ChooseMethod = 5;   %if 0 uses batch gradient, if 1 uses mini batch 
+ChooseMethod = 0;   %if 0 uses batch gradient, if 1 uses mini batch 
                     %gradient (note that if the mini batch has size 1 it's 
                     %a sthocastic gradient descent). if 2 use batch
                     %gradient with momentum.if 3 use desterov method

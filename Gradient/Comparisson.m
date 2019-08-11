@@ -97,12 +97,12 @@ Accuracy = [Accuracy; accuracy];
 Best_Sol = [Best_Sol; best_J];
 plot(J)
 
-%Load the Mini Batch gradient with nesterov
-load('MiniBatchGradientWithAdadelta_100.mat')
-Time_Optimizing = [Time_Optimizing; time];
-Accuracy = [Accuracy; accuracy];
-Best_Sol = [Best_Sol; best_J];
-plot(J)
+% %Load the Mini Batch gradient with nesterov
+% load('MiniBatchGradientWithAdadelta_100.mat')
+% Time_Optimizing = [Time_Optimizing; time];
+% Accuracy = [Accuracy; accuracy];
+% Best_Sol = [Best_Sol; best_J];
+% plot(J)
 
 %Load the Mini Batch gradient with nesterov
 load('MiniBatchGradientWithRMSprop_100.mat')
@@ -124,10 +124,11 @@ Time_Optimizing = [Time_Optimizing; time];
 Accuracy = [Accuracy; accuracy];
 Best_Sol = [Best_Sol; best_J];
 plot(J,'k')
+format short
 
 Method = {'Batch Gradient'; 'Stochastic gradient';'Mini Batch Gradient';...
     'Mini Batch Gradient With Momentum';'Mini Batch Gradient With Nesterov'...
-    ;'Mini Batch Gradient With Adagrad';'Mini Batch Gradient With Adadelta';...
+    ;'Mini Batch Gradient With Adagrad';...
     'Mini Batch Gradient With RMSprop'; 'Mini Batch Gradient With Adam'...
     ; 'Mini Batch Gradient With Adamax'};
 legend(Method)
